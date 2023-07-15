@@ -6,6 +6,7 @@ import com.example.chestGameServer.Models.Entities.UserStats;
 import com.example.chestGameServer.Models.Game.FullChatException;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Models.Game.GameRoom;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
@@ -13,6 +14,7 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
@@ -23,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Log4j2
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc(addFilters = false)
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -31,13 +33,16 @@ import java.util.List;
 @Getter
 @ComponentScan(basePackages = {"com.example.chestGameServer.Repositories"})
 public abstract class AbstractTestClass {
-
-@Autowired
-MockMvc mockMvc;
-User user;
-GameRoom gameRoom;
-List<User> users;
-List<Player> players;
+    @Autowired
+    ObjectMapper mapper;
+    @Value("${local.server.port}")
+    String port;
+    @Autowired
+    MockMvc mockMvc;
+    User user;
+    GameRoom gameRoom;
+    List<User> users;
+    List<Player> players;
 @BeforeAll
     public void setup() {
     user = User.builder()

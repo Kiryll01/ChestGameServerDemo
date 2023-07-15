@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @SuperBuilder
 @MappedSuperclass
-public class AbstractUserStats {
+public abstract class AbstractUserStats {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;

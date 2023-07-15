@@ -2,7 +2,7 @@ package com.example.chestGameServer;
 
 import com.example.chestGameServer.Models.Entities.User;
 import com.example.chestGameServer.Models.Game.GameRoom;
-import com.example.chestGameServer.Repositories.RoomRepository;
+import com.example.chestGameServer.Repositories.GameRoomRepository;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -17,10 +17,10 @@ public class RedisTests extends AbstractTestClass{
     @Autowired
     HashOperations<String,String, GameRoom> roomHashOperations;
     @Autowired
-    RoomRepository roomRepository;
+    GameRoomRepository gameRoomRepository;
     @Test
     public void saveRoom(){
-        GameRoom gameRoomFromDb =roomRepository.save(gameRoom);
+        GameRoom gameRoomFromDb = gameRoomRepository.save(gameRoom);
         Assertions.assertEquals(gameRoom, gameRoomFromDb);
         log.info(gameRoom);
         log.info(gameRoomFromDb);
@@ -32,6 +32,6 @@ public class RedisTests extends AbstractTestClass{
     }
     @AfterAll
     public void destroy(){
-        roomRepository.deleteAll();
+        gameRoomRepository.deleteAll();
 }
 }

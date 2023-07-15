@@ -1,6 +1,6 @@
 package com.example.chestGameServer.Models.DTO;
 
-import com.example.chestGameServer.Models.Abstract.AbstractUser;
+import com.example.chestGameServer.Models.Abstract.AbstractUserStats;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -10,6 +10,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class UserDTO extends AbstractUser {
-    UserStatsDto userStats;
+public class UserStatsDto extends AbstractUserStats {
+    String inf;
 }

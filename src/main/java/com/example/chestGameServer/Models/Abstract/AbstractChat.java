@@ -17,8 +17,9 @@ import java.util.UUID;
 public abstract class AbstractChat<M extends AbstractUser> implements Serializable {
     final String id= UUID.randomUUID().toString().substring(0,4);
     String name;
+    String ownerId;
     List<M> members=new ArrayList<>();
-     int roomSizeLimit;
+    int roomSizeLimit;
 
     public void setRoomSizeLimit(int roomSizeLimit) throws FullChatException {
         this.roomSizeLimit = roomSizeLimit;
