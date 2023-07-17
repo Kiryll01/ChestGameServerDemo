@@ -1,9 +1,8 @@
 package com.example.chestGameServer.Models.Factories;
 
 import com.example.chestGameServer.Models.DTO.UserDTO;
-import com.example.chestGameServer.Models.Entities.User;
+import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Models.Game.Player;
-import jakarta.persistence.MappedSuperclass;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

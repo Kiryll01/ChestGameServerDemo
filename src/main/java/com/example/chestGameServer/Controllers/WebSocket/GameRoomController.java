@@ -23,6 +23,7 @@ public static final String FETCH_CREATE_GAME_ROOM_EVENT="topic/fetch.rooms.game.
 }
 @MessageMapping(CREATE_GAME_ROOM)
     public void createRoom(CreateRoomMessage message){
-
+message.getName();
+message.getRoomSizeLimit();
 }
 }

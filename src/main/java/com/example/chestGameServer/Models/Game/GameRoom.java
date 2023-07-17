@@ -13,7 +13,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@RedisHash("Rooms")
+@RedisHash("GameRooms")
 public class GameRoom extends AbstractChat<Player> {
     public GameRoom(String name) {
         super();

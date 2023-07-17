@@ -1,4 +1,4 @@
-package com.example.chestGameServer.Models.Entities;
+package com.example.chestGameServer.Models.User;
 
 import com.example.chestGameServer.Models.Abstract.AbstractUser;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -8,8 +8,6 @@ import jakarta.persistence.OneToOne;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
-
-import java.util.UUID;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data

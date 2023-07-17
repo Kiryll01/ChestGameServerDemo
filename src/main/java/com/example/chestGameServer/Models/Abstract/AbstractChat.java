@@ -2,9 +2,11 @@ package com.example.chestGameServer.Models.Abstract;
 
 import com.example.chestGameServer.Models.Game.FullChatException;
 import com.example.chestGameServer.Models.Game.Player;
+import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.redis.core.index.Indexed;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -14,8 +16,10 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Data
 @NoArgsConstructor
-public abstract class AbstractChat<M extends AbstractUser> implements Serializable {
-    final String id= UUID.randomUUID().toString().substring(0,4);
+public abstract class AbstractChat<M extends AbstractUser> implements Serializable{
+    @Id
+    String id= UUID.randomUUID().toString().substring(0,4);
+    @Indexed
     String name;
     String ownerId;
     List<M> members=new ArrayList<>();
@@ -31,7 +35,7 @@ public abstract class AbstractChat<M extends AbstractUser> implements Serializab
         }
     }
     public void setMembers(List<M> members) throws FullChatException{
-        if(members.size()>roomSizeLimit) throw new FullChatException("too much members",id,name);
+        if(members.size()>roomSizeLimit) throw new FullChatException("too much members",getId(),name);
         this.members=members;
     }
     public List<M> getMembers() {
@@ -40,7 +44,7 @@ public abstract class AbstractChat<M extends AbstractUser> implements Serializab
         return copyList;
     }
     public void addMember(M member) throws FullChatException {
-        if(isRoomSizeLimitReached()) throw new FullChatException("roomSizeLimit is reached",id,name);
+        if(isRoomSizeLimitReached()) throw new FullChatException("roomSizeLimit is reached",getId(),name);
         members.add(member);
     }
     public AbstractChat(List<M> members) {

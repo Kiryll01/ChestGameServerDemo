@@ -1,8 +1,7 @@
 package com.example.chestGameServer;
 
-import com.example.chestGameServer.Models.Abstract.AbstractUser;
-import com.example.chestGameServer.Models.Entities.User;
-import com.example.chestGameServer.Models.Entities.UserStats;
+import com.example.chestGameServer.Models.User.User;
+import com.example.chestGameServer.Models.User.UserStats;
 import com.example.chestGameServer.Models.Game.FullChatException;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Models.Game.GameRoom;

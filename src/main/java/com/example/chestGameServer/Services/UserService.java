@@ -1,6 +1,6 @@
 package com.example.chestGameServer.Services;
 
-import com.example.chestGameServer.Models.Entities.User;
+import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Repositories.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

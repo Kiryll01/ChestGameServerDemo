@@ -1,7 +1,7 @@
 package com.example.chestGameServer;
 
-import com.example.chestGameServer.Models.Entities.User;
-import com.example.chestGameServer.Models.Entities.UserStats;
+import com.example.chestGameServer.Models.User.User;
+import com.example.chestGameServer.Models.User.UserStats;
 import com.example.chestGameServer.Repositories.UserRepository;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Assertions;

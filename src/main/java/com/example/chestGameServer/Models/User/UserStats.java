@@ -1,4 +1,4 @@
-package com.example.chestGameServer.Models.Entities;
+package com.example.chestGameServer.Models.User;
 
 import com.example.chestGameServer.Models.Abstract.AbstractUserStats;
 import com.fasterxml.jackson.annotation.JsonBackReference;
