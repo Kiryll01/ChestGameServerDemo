@@ -7,5 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum RedisKeys {
 GAME_ROOMS("GameRooms");
-String id;
+private final String id;
 }

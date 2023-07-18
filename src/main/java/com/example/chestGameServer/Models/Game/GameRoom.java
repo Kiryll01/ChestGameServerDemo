@@ -18,7 +18,13 @@ public class GameRoom extends AbstractChat<Player> {
     public GameRoom(String name) {
         super();
         super.setName(name);
+        roomSizeLimit=4;
     }
+
+    public GameRoom() {
+        roomSizeLimit=4;
+    }
+
     @Override
     public void setRoomSizeLimit(int roomSizeLimit) throws FullChatException {
        if(checkRoomSizeLimit(roomSizeLimit)) super.setRoomSizeLimit(roomSizeLimit);

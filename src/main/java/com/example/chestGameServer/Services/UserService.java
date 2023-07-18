@@ -2,15 +2,32 @@ package com.example.chestGameServer.Services;
 
 import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Repositories.UserRepository;
+import com.example.chestGameServer.Services.Exceptions.UserNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.messaging.AbstractSubProtocolEvent;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 @RequiredArgsConstructor
+@Log4j2
 public class UserService {
+    @EventListener(SessionConnectedEvent.class)
+            public void sessionConnectedListener(SessionConnectedEvent event){
+       log.info("new connection established : ");
+    }
+    @EventListener(SessionSubscribeEvent.class)
+    public void sessionConnectEvent(SessionSubscribeEvent event){
+        log.info("received new Subscribe frame");
+    }
+
+
 UserRepository userRepository;
 public User save(User user){
    return userRepository.save(user);

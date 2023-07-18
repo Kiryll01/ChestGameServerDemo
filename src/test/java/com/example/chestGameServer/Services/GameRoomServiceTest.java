@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @Log4j2
 @FieldDefaults(level = AccessLevel.PROTECTED)
 class GameRoomServiceTest extends AbstractTestClass {
-@Autowired
-GameRoomService service;
     @Test
     void save() {
 

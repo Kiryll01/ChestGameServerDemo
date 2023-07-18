@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 public class GameRoomService extends AbstractRoomService<GameRoom,GameRoomRepository> {
     public GameRoomService(GameRoomRepository repository) {
-        super(repository);
+        super(GameRoom.class, repository);
     }
-
 }

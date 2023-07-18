@@ -2,6 +2,7 @@ package com.example.chestGameServer.Models.User;
 
 import com.example.chestGameServer.Models.Abstract.AbstractUser;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -18,7 +19,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder()
 public class User extends AbstractUser {
-@OneToOne
+@OneToOne(cascade = CascadeType.ALL)
 @JsonManagedReference
 @JoinColumn(name = "user_stats_id")
 UserStats userStats;

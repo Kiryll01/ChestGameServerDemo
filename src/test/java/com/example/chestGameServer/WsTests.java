@@ -2,6 +2,7 @@ package com.example.chestGameServer;
 
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
+import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.configs.WebSocketConfig;
 import lombok.extern.log4j.Log4j2;
 
@@ -15,13 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.messaging.simp.stomp.*;
 
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
@@ -38,12 +37,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 
 @Log4j2
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WsTests extends AbstractTestClass{
-    @Autowired
-    MockMvc mockMvc;
     WebClient client;
     @BeforeAll
     public void setupWebSockets() throws Exception {
@@ -60,6 +59,8 @@ public class WsTests extends AbstractTestClass{
                 .connect(wsUrl, new StompSessionHandlerAdapter() {})
                 .get(5, TimeUnit.SECONDS);
 
+        //Thread.sleep(5000);
+
         client = WebClient.builder()
                 .stompClient(stompClient)
                 .stompSession(stompSession)
@@ -68,17 +69,33 @@ public class WsTests extends AbstractTestClass{
 
     }
 @Test
-@SneakyThrows
-public void test()  {
-        StompSession session = client.getStompSession();
-       RunStopFrameHandler handler=client.getHandler();
-       session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
-       session.send(GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("Zahodite bratiya igrat",4));
-       byte[] payload= (byte[]) handler.getFuture().get();
-       Set<LinkedHashMap<String, Object>> params=(Set<LinkedHashMap<String, Object>>)mapper.readValue(payload, Set.class);
-       params.stream().forEach(System.out::println);
-    };
+public void createRoomTest() throws Exception  {
 
+        StompSession session = client.getStompSession();
+        session.send(WebSocketConfig.APPLICATION_DESTINATION_PREFIX+GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("Zahodite_bratiya_igrat",4, user.getId()));
+         RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
+        session.subscribe(WebSocketConfig.TOPIC_DESTINATION_PREFIX+GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
+
+        byte[] payload= (byte[]) handler.getFuture().get();
+        GameRoom responseGameRoom=mapper.readValue(payload, GameRoom.class);
+        log.info(responseGameRoom);
+
+    String user_id=user.getId();
+
+        String contentAsString = mockMvc
+            .perform(MockMvcRequestBuilders.get(GameRoomController.FETCH_ROOMS,user_id))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    log.info(contentAsString);
+
+    };
+@Test
+public void joinRoomTest() throws Exception{
+
+}
     @AfterAll
     public void tearDown() {
 
@@ -101,8 +118,7 @@ public void test()  {
     @Data
     @AllArgsConstructor
     @FieldDefaults(level = AccessLevel.PRIVATE)
-    private class RunStopFrameHandler implements StompFrameHandler {
-
+    private class RunStopFrameHandler implements StompSessionHandler {
         CompletableFuture<Object> future;
 
         @Override
@@ -118,13 +134,28 @@ public void test()  {
 
             log.info(stompHeaders.toString());
 
-            System.out.println(Strings.repeat("-",100));
-
-            log.info(stompHeaders.getContentType());
-
             future.complete(o);
 
-            future = new CompletableFuture<>();
+            future=new CompletableFuture<>();
+        }
+
+        @Override
+        public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+            log.info("connected");
+        }
+
+        @Override
+        public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
+            log.error("caught ws exception");
+            System.out.println(command);
+            System.out.println(headers);
+            System.out.println(payload);
+            System.out.println(exception);
+        }
+
+        @Override
+        public void handleTransportError(StompSession session, Throwable exception) {
+            log.error(exception);
         }
     }
 

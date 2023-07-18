@@ -19,6 +19,7 @@ import java.util.UUID;
 public class Player extends AbstractUser {
     String roomId;
     List<Card> cards;
+    String sessionId;
 
     public Player(String name, String roomId, List<Card> cards) {
         super(name);

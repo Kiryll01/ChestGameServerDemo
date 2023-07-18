@@ -1,4 +1,4 @@
-package com.example.chestGameServer.Services;
+package com.example.chestGameServer.Services.Exceptions;
 
 import jakarta.annotation.Nullable;
 

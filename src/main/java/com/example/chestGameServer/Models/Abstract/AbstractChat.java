@@ -16,6 +16,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @Data
 @NoArgsConstructor
+@SuperBuilder
 public abstract class AbstractChat<M extends AbstractUser> implements Serializable{
     @Id
     String id= UUID.randomUUID().toString().substring(0,4);
@@ -23,7 +24,7 @@ public abstract class AbstractChat<M extends AbstractUser> implements Serializab
     String name;
     String ownerId;
     List<M> members=new ArrayList<>();
-    int roomSizeLimit;
+    int roomSizeLimit=1000;
 
     public void setRoomSizeLimit(int roomSizeLimit) throws FullChatException {
         this.roomSizeLimit = roomSizeLimit;
