@@ -1,12 +1,14 @@
 package com.example.chestGameServer.Services;
 
 import com.example.chestGameServer.Models.Abstract.AbstractChat;
+import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
 import com.example.chestGameServer.Repositories.AbstractRoomRepository;
-import com.example.chestGameServer.Services.Exceptions.RoomNotFoundException;
+import com.example.chestGameServer.Exceptions.RoomNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +20,7 @@ import java.util.List;
 public abstract class AbstractRoomService<C extends AbstractChat,R extends AbstractRoomRepository<C>> {
     final Class<C> typeChatClass;
     R repository;
+    SimpMessagingTemplate messagingTemplate;
 public Iterable<C> findAll(){return repository.findAll();}
 public C save(C chat){
 return repository.save(chat);
@@ -30,5 +33,8 @@ public C findById(String id) throws RoomNotFoundException {
 }
 public List<C> findAllByName(String name){
     return repository.findAllByName(name);
+}
+public void sendChatEvent(String destination,ChatEvent event){
+    messagingTemplate.convertAndSend(destination,event);
 }
 }

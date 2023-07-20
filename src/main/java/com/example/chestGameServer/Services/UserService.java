@@ -2,14 +2,13 @@ package com.example.chestGameServer.Services;
 
 import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Repositories.UserRepository;
-import com.example.chestGameServer.Services.Exceptions.UserNotFoundException;
+import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.messaging.AbstractSubProtocolEvent;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 

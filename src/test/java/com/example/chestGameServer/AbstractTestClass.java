@@ -3,7 +3,7 @@ package com.example.chestGameServer;
 import com.example.chestGameServer.Models.Enums.RedisKeys;
 import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Models.User.UserStats;
-import com.example.chestGameServer.Models.Game.FullChatException;
+import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Services.GameRoomService;
@@ -87,12 +87,13 @@ public abstract class AbstractTestClass {
 }
 @AfterAll
 public void shutUp(){
-    Arrays.stream(RedisKeys.values())
-            .map(key->key.getId())
-            .forEach(key-> {
-                Set<Object> keys=gameRoomRedisTemplate.opsForHash().keys(key);
-                gameRoomRedisTemplate.opsForHash().delete(key,keys);
-            });
+
+//    Arrays.stream(RedisKeys.values())
+//            .map(key->key.getId())
+//            .forEach(key-> {
+//                Set<Object> keys=gameRoomRedisTemplate.opsForHash().keys(key);
+//                gameRoomRedisTemplate.opsForHash().delete(key,keys);
+//            });
 }
 @Test
     public void runAllTests(){

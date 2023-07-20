@@ -1,38 +1,39 @@
 package com.example.chestGameServer.Controllers.WebSocket;
 
+import com.example.chestGameServer.Exceptions.ExceptionUtils;
+import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
+import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
+import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
+import com.example.chestGameServer.Models.DTO.Messages.DefaultTextMessage;
+import com.example.chestGameServer.Models.Enums.DefaultAppProperties;
 import com.example.chestGameServer.Models.Factories.UserMapper;
-import com.example.chestGameServer.Models.Game.FullChatException;
+import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Models.User.User;
-import com.example.chestGameServer.Services.Exceptions.RoomNotFoundException;
+import com.example.chestGameServer.Exceptions.RoomNotFoundException;
 import com.example.chestGameServer.Services.GameRoomService;
-import com.example.chestGameServer.Services.Exceptions.UserNotFoundException;
+import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import com.example.chestGameServer.Services.UserService;
 import com.example.chestGameServer.configs.WebSocketConfig;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.hibernate.annotations.Fetch;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,13 +46,17 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequiredArgsConstructor
 @Log4j2
 public class GameRoomController {
-    SimpMessagingTemplate messagingTemplate;
-    UserService userService;
-    GameRoomService gameRoomService;
+    public static final String FETCH_CHAT_EVENTS = "/rooms.game.{room_id}.events";
     public static final String FETCH_ROOMS="/user/{user_id}/rooms/game_room/get_all";
     public static final String CREATE_GAME_ROOM="/rooms.game.create";
     public static final String FETCH_CREATE_GAME_ROOM_EVENT="/rooms.game.create.event";
-public static final String JOIN_ROOM="/rooms.game.{room_id}.member.{member_id}";
+    public static final String JOIN_ROOM="/rooms.game.{room_id}.member.{member_id}";
+    public static final String FETCH_EXCEPTIONS="/user/queue/rooms.game.{room_id}.exceptions";
+    SimpMessagingTemplate messagingTemplate;
+    UserService userService;
+    GameRoomService gameRoomService;
+    ExceptionUtils exceptionUtils;
+
     @GetMapping(FETCH_ROOMS)
     @ResponseBody
     public ResponseEntity<?> fetchRooms(@PathVariable("user_id")String userId){
@@ -68,24 +73,31 @@ public static String makeJoinRoomLink(String roomId,String memberId){
 }
 // map people to join in chat
 @SubscribeMapping
-public void fetchPersonalCardRequests(){
-
+public CardRequestMessage fetchPersonalCardRequests(){
+return null;
 }
 @SubscribeMapping
-public void fetchAllCardRequests(){
-
+public CardRequestMessage fetchAllCardRequests(){
+return null;
 }
 @SubscribeMapping
-public void fetchAllGameChatMessages(){
-
+public DefaultTextMessage fetchAllGameChatMessages(){
+return new DefaultTextMessage("send your messages for everybody here", DefaultAppProperties.DEFAULT_URL.getName());
 }
 @SubscribeMapping
-public void fetchPersonalGameChatMessages(){
-
+public DefaultTextMessage fetchPersonalGameChatMessages(){
+    return new DefaultTextMessage("send your personal messages here", DefaultAppProperties.DEFAULT_URL.getName());
 }
-@SubscribeMapping
-public void fetchMemberJoinInChat(){
-
+@SubscribeMapping(FETCH_CREATE_GAME_ROOM_EVENT) public GameRoom fetchCreateGameRoomEvent(){
+        return null;
+    }
+@SubscribeMapping(FETCH_CHAT_EVENTS)
+public ChatEvent fetchChatEvents(){
+return null;
+}
+@SubscribeMapping(FETCH_EXCEPTIONS)
+public String fetchExceptions(){
+return null;
 }
 @MessageMapping(JOIN_ROOM)
 public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
@@ -98,11 +110,15 @@ player.setRoomId(roomId);
 player.setSessionId(simpSessionId);
 gameRoom.addMember(player);
 gameRoomService.save(gameRoom);
+gameRoomService.sendChatEvent(roomId, MemberJoinGameRoomEvent.builder()
+        .user(player)
+        .chat(gameRoom)
+        .message(player.getName()+" joined the room")
+        .build());
 return gameRoom;
 }
-@SubscribeMapping(FETCH_CREATE_GAME_ROOM_EVENT)
-  public GameRoom fetchCreateGameRoomEvent(){
-        return null;
+public void startGame(){
+        
 }
 
 //TODO: peak name from Principal

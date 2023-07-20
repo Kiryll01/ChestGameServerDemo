@@ -1,7 +1,6 @@
 package com.example.chestGameServer.Models.Abstract;
 
-import com.example.chestGameServer.Models.Game.FullChatException;
-import com.example.chestGameServer.Models.Game.Player;
+import com.example.chestGameServer.Exceptions.FullChatException;
 import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

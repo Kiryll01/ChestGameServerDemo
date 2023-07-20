@@ -72,13 +72,17 @@ public class WsTests extends AbstractTestClass{
 public void createRoomTest() throws Exception  {
 
         StompSession session = client.getStompSession();
-        session.send(WebSocketConfig.APPLICATION_DESTINATION_PREFIX+GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("Zahodite_bratiya_igrat",4, user.getId()));
+    CreateRoomMessage createRoomMessage = new CreateRoomMessage("Zahodite_bratiya_igrat", 4, user.getId());
+    session.send(WebSocketConfig.APPLICATION_DESTINATION_PREFIX+GameRoomController.CREATE_GAME_ROOM, createRoomMessage);
          RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
         session.subscribe(WebSocketConfig.TOPIC_DESTINATION_PREFIX+GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
 
-        byte[] payload= (byte[]) handler.getFuture().get();
-        GameRoom responseGameRoom=mapper.readValue(payload, GameRoom.class);
-        log.info(responseGameRoom);
+    byte[] payload= (byte[]) handler.getFuture().get();
+    GameRoom responseGameRoom=mapper.readValue(payload, GameRoom.class);
+    Assertions.assertEquals(createRoomMessage.getName(),responseGameRoom.getName(),"names should be equal");
+    System.out.println("received payload:");
+
+    log.info(responseGameRoom);
 
     String user_id=user.getId();
 
@@ -98,7 +102,7 @@ public void joinRoomTest() throws Exception{
 }
     @AfterAll
     public void tearDown() {
-
+gameRoomService.deleteAll();
         if (client.getStompSession().isConnected()) {
             client.getStompSession().disconnect();
             client.getStompClient().stop();
@@ -136,7 +140,7 @@ public void joinRoomTest() throws Exception{
 
             future.complete(o);
 
-            future=new CompletableFuture<>();
+            //future=new CompletableFuture<>();
         }
 
         @Override

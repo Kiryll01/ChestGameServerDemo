@@ -1,13 +1,11 @@
 package com.example.chestGameServer.Models.Game;
 
+import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Models.Abstract.AbstractChat;
-import com.example.chestGameServer.Models.Abstract.AbstractUser;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.SuperBuilder;
 import org.springframework.data.redis.core.RedisHash;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)

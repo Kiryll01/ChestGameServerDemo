@@ -1,4 +1,4 @@
-package com.example.chestGameServer.Services.Exceptions;
+package com.example.chestGameServer.Exceptions;
 
 import com.example.chestGameServer.Models.Abstract.AbstractChat;
 
