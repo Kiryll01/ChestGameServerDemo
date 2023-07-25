@@ -1,6 +1,8 @@
 package com.example.chestGameServer;
 
+import com.example.chestGameServer.Controllers.MainOptionsController;
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
+import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.configs.WebSocketConfig;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.redis.connection.Subscription;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
@@ -87,7 +90,7 @@ public void createRoomTest() throws Exception  {
     String user_id=user.getId();
 
         String contentAsString = mockMvc
-            .perform(MockMvcRequestBuilders.get(GameRoomController.FETCH_ROOMS,user_id))
+            .perform(MockMvcRequestBuilders.get(MainOptionsController.FETCH_ROOMS,user_id))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
@@ -96,6 +99,30 @@ public void createRoomTest() throws Exception  {
     log.info(contentAsString);
 
     };
+    @Test
+    public void createBreakRoomTest() throws Exception {
+        StompSession session = client.getStompSession();
+
+        String sessionId=session.getSessionId();
+
+        CreateRoomMessage createRoomMessage = new CreateRoomMessage("newGameRoom", 7, sessionId);
+        RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
+        session.send(WebSocketConfig.APPLICATION_DESTINATION_PREFIX+GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
+
+        log.info(sessionId);
+
+        StompSession.Subscription subscription=session.subscribe(
+                WebSocketConfig.TOPIC_DESTINATION_PREFIX+ MemberWsController.FETCH_ROOM_EXCEPTIONS.replace("{username}",sessionId)
+                ,handler);
+      log.info(subscription.getSubscriptionHeaders());
+        session.send(WebSocketConfig.APPLICATION_DESTINATION_PREFIX+GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
+        byte[] payload= (byte[]) handler.getFuture().get();
+        String message=mapper.readValue(payload, String.class);
+        log.info(message);
+        Assertions.assertTrue(message.contains("this type of chat can contain only 2-4 members"));
+    }
+
+
 @Test
 public void joinRoomTest() throws Exception{
 

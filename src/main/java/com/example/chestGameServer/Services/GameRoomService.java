@@ -1,5 +1,7 @@
 package com.example.chestGameServer.Services;
 
+import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
+import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
 import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Repositories.GameRoomRepository;
@@ -8,8 +10,6 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
-import static com.example.chestGameServer.Controllers.WebSocket.GameRoomController.FETCH_CHAT_EVENTS;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
@@ -22,8 +22,7 @@ public void deleteAll(){
 }
     @Override
     public void sendChatEvent(String roomId, ChatEvent event) {
-        messagingTemplate.convertAndSend(FETCH_CHAT_EVENTS.replace("{room_id}",roomId),
+        messagingTemplate.convertAndSend(WsUtils.getEventHandlingDestination(roomId),
                 event);
-
     }
 }

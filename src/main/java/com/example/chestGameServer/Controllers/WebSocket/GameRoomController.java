@@ -1,20 +1,18 @@
 package com.example.chestGameServer.Controllers.WebSocket;
 
-import com.example.chestGameServer.Exceptions.ExceptionUtils;
+import com.example.chestGameServer.Exceptions.*;
 import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
 import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
 import com.example.chestGameServer.Models.DTO.Messages.DefaultTextMessage;
 import com.example.chestGameServer.Models.Enums.DefaultAppProperties;
+import com.example.chestGameServer.Models.Factories.RoomFactory;
 import com.example.chestGameServer.Models.Factories.UserMapper;
-import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Models.User.User;
-import com.example.chestGameServer.Exceptions.RoomNotFoundException;
 import com.example.chestGameServer.Services.GameRoomService;
-import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import com.example.chestGameServer.Services.UserService;
 import com.example.chestGameServer.configs.WebSocketConfig;
 import lombok.AccessLevel;
@@ -24,9 +22,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
@@ -46,41 +42,27 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequiredArgsConstructor
 @Log4j2
 public class GameRoomController {
-    public static final String FETCH_CHAT_EVENTS = "/rooms.game.{room_id}.events";
-    public static final String FETCH_ROOMS="/user/{user_id}/rooms/game_room/get_all";
-    public static final String CREATE_GAME_ROOM="/rooms.game.create";
-    public static final String FETCH_CREATE_GAME_ROOM_EVENT="/rooms.game.create.event";
-    public static final String JOIN_ROOM="/rooms.game.{room_id}.member.{member_id}";
-    public static final String FETCH_EXCEPTIONS="/user/queue/rooms.game.{room_id}.exceptions";
+    public static final String CREATE_GAME_ROOM="/rooms/game/create";
+    public static final String FETCH_CREATE_GAME_ROOM_EVENT="rooms/game/events/create";
+    public static final String JOIN_ROOM="/rooms/game/{room_id}/member/{member_id}/join-room";
+    public static final String FETCH_PERSONAL_CARD_REQUESTS="rooms/game/{room_id}/member/{member_id}/card-request";
+    public static final String FETCH_ALL_CARD_REQUESTS="rooms/game/{room_id}/card-requests";
+    public static final String FETCH_ALL_GAME_CHAT_MESSAGES="rooms/game/{room_id}/chat-messages";
+    public static final String FETCH_PERSONAL_GAME_CHAT_MESSAGES="rooms/game/{room_id}/member/{member_id}/chat-messages";
+    RoomFactory roomFactory;
     SimpMessagingTemplate messagingTemplate;
     UserService userService;
     GameRoomService gameRoomService;
-    ExceptionUtils exceptionUtils;
 
-    @GetMapping(FETCH_ROOMS)
-    @ResponseBody
-    public ResponseEntity<?> fetchRooms(@PathVariable("user_id")String userId){
-       List<EntityModel<GameRoom>> rooms= ((List<GameRoom>) gameRoomService.findAll()).stream()
-                .map(room-> EntityModel.of(room,
-                        linkTo(GameRoomController.class).slash(makeJoinRoomLink(room.getId(),userId)).withRel("game_room_ws_subscribe_link")))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok().body(
-                CollectionModel.of(rooms,linkTo(methodOn(GameRoomController.class).fetchRooms(userId)).withSelfRel()));
-
-    }
-public static String makeJoinRoomLink(String roomId,String memberId){
-        return JOIN_ROOM.replace("{room_id}",roomId).replace("{member_id}",memberId);
-}
-// map people to join in chat
-@SubscribeMapping
+@SubscribeMapping(FETCH_PERSONAL_CARD_REQUESTS)
 public CardRequestMessage fetchPersonalCardRequests(){
 return null;
 }
-@SubscribeMapping
+@SubscribeMapping(FETCH_ALL_CARD_REQUESTS)
 public CardRequestMessage fetchAllCardRequests(){
 return null;
 }
-@SubscribeMapping
+@SubscribeMapping()
 public DefaultTextMessage fetchAllGameChatMessages(){
 return new DefaultTextMessage("send your messages for everybody here", DefaultAppProperties.DEFAULT_URL.getName());
 }
@@ -91,46 +73,52 @@ public DefaultTextMessage fetchPersonalGameChatMessages(){
 @SubscribeMapping(FETCH_CREATE_GAME_ROOM_EVENT) public GameRoom fetchCreateGameRoomEvent(){
         return null;
     }
-@SubscribeMapping(FETCH_CHAT_EVENTS)
-public ChatEvent fetchChatEvents(){
-return null;
-}
-@SubscribeMapping(FETCH_EXCEPTIONS)
-public String fetchExceptions(){
-return null;
-}
 @MessageMapping(JOIN_ROOM)
 public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
                          @DestinationVariable("member_id") String memberId,
-                         @Header String simpSessionId) throws RoomNotFoundException, UserNotFoundException, FullChatException {
-GameRoom gameRoom=gameRoomService.findById(roomId);
-User user=userService.findById(memberId);
-Player player = UserMapper.USER_MAPPER.toPlayer(UserMapper.USER_MAPPER.toUserDto(user));
-player.setRoomId(roomId);
-player.setSessionId(simpSessionId);
-gameRoom.addMember(player);
-gameRoomService.save(gameRoom);
-gameRoomService.sendChatEvent(roomId, MemberJoinGameRoomEvent.builder()
-        .user(player)
-        .chat(gameRoom)
-        .message(player.getName()+" joined the room")
-        .build());
-return gameRoom;
-}
-public void startGame(){
-        
+                         @Header("simpSessionId") String sessionId) throws RoomException {
+    Player player;
+    GameRoom gameRoom;
+    try {
+        gameRoom = gameRoomService.findById(roomId);
+        User user = userService.findById(memberId);
+        player = UserMapper.USER_MAPPER.toPlayer(UserMapper.USER_MAPPER.toUserDto(user));
+        player.setRoomId(roomId);
+        player.setSessionId(sessionId);
+        gameRoom.addMember(player);
+        gameRoomService.save(gameRoom);
+        gameRoomService.sendChatEvent(roomId, MemberJoinGameRoomEvent.builder()
+                .user(player)
+                .chat(gameRoom)
+                .message(player.getName() + " joined the room")
+                .build());
+    } catch (AppException e) {
+        throw new RoomException(e.getMessage(),sessionId,roomId,e);
+    }
+    gameRoomService.save(gameRoom);
+    gameRoomService.sendChatEvent(roomId, MemberJoinGameRoomEvent.builder()
+            .user(player)
+            .chat(gameRoom)
+            .message(player.getName() + " joined the room")
+            .build());
+    return gameRoom;
 }
 
 //TODO: peak name from Principal
 @MessageMapping(CREATE_GAME_ROOM)
     public void createRoom(
-            CreateRoomMessage message,
-            @Header("simpSessionId") String sessionId
-) throws FullChatException,UserNotFoundException {
+        CreateRoomMessage message,
+       @Header("simpSessionId") String sessionId
+) throws RoomException {
 
-    log.info("new Request for creating a room");
+    log.info("new Request for creating a room with sessionId "+ sessionId);
 
-    GameRoom gameRoom = createGameRoom(message,message.getUserId(),sessionId);
+    GameRoom gameRoom = null;
+    try {
+        gameRoom = roomFactory.createRoom(message,sessionId, GameRoom.class);
+    } catch (AppException e) {
+       throw new RoomException(e.getMessage(),sessionId, null,e);
+    }
 
     log.info("new room created"+ gameRoom);
 
@@ -140,25 +128,5 @@ public void startGame(){
 
     log.info("room sent to the topic");
 }
-// TODO : make fabric for AbstractChat
-    private GameRoom createGameRoom(CreateRoomMessage message,String userId,String sessionId) throws FullChatException, UserNotFoundException {
 
-        userService.findById(userId);
-
-        GameRoom gameRoom=new GameRoom(message.getName());
-
-        gameRoom.setRoomSizeLimit(message.getRoomSizeLimit());
-
-        Player player=Player.builder()
-                        .roomId(gameRoom.getId())
-                        .cards(new ArrayList<>())
-                    .sessionId(sessionId)
-                .build();
-
-        gameRoom.addMember(player);
-
-        gameRoom.setOwnerId(userId);
-
-        return gameRoom;
-    }
 }
