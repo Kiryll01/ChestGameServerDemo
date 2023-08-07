@@ -6,8 +6,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(makeFinal = true,level = AccessLevel.PRIVATE)
 @Data
 public class Card {
-  String cardValue;
-  String suit;
+  CardValue cardValue;
+  Suit suit;
 
   public Card() {
     cardValue=null;
@@ -15,7 +15,7 @@ public class Card {
   }
 
   public Card(CardValue cardValue, Suit suit){
-  this.cardValue= cardValue.getName();
-  this.suit=suit.getSuit();
+  this.cardValue= cardValue;
+  this.suit=suit;
 }
 }

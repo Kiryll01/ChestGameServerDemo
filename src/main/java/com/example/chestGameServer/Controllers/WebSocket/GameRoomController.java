@@ -1,7 +1,7 @@
 package com.example.chestGameServer.Controllers.WebSocket;
 
 import com.example.chestGameServer.Exceptions.*;
-import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
+
 import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
@@ -12,6 +12,7 @@ import com.example.chestGameServer.Models.Factories.UserMapper;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Models.User.User;
+import com.example.chestGameServer.Services.GameProcessService;
 import com.example.chestGameServer.Services.GameRoomService;
 import com.example.chestGameServer.Services.UserService;
 import com.example.chestGameServer.configs.WebSocketConfig;
@@ -19,23 +20,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 
 @Controller
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
@@ -49,25 +40,25 @@ public class GameRoomController {
     public static final String FETCH_ALL_CARD_REQUESTS="rooms/game/{room_id}/card-requests";
     public static final String FETCH_ALL_GAME_CHAT_MESSAGES="rooms/game/{room_id}/chat-messages";
     public static final String FETCH_PERSONAL_GAME_CHAT_MESSAGES="rooms/game/{room_id}/member/{member_id}/chat-messages";
+    GameProcessService gameProcessService;
     RoomFactory roomFactory;
     SimpMessagingTemplate messagingTemplate;
     UserService userService;
     GameRoomService gameRoomService;
-
 @SubscribeMapping(FETCH_PERSONAL_CARD_REQUESTS)
-public CardRequestMessage fetchPersonalCardRequests(){
-return null;
-}
+public CardRequestMessage fetchPersonalCardRequests(@DestinationVariable("room_id") String roomId,
+                                                    @DestinationVariable("member_id") String memberId){return null;}
 @SubscribeMapping(FETCH_ALL_CARD_REQUESTS)
-public CardRequestMessage fetchAllCardRequests(){
+public CardRequestMessage fetchAllCardRequests(@DestinationVariable("room_id") String roomId){
 return null;
 }
-@SubscribeMapping()
-public DefaultTextMessage fetchAllGameChatMessages(){
+@SubscribeMapping(FETCH_ALL_GAME_CHAT_MESSAGES)
+public DefaultTextMessage fetchAllGameChatMessages(@DestinationVariable("room_id") String roomId){
 return new DefaultTextMessage("send your messages for everybody here", DefaultAppProperties.DEFAULT_URL.getName());
 }
-@SubscribeMapping
-public DefaultTextMessage fetchPersonalGameChatMessages(){
+@SubscribeMapping(FETCH_PERSONAL_GAME_CHAT_MESSAGES)
+public DefaultTextMessage fetchPersonalGameChatMessages(@DestinationVariable("room_id") String roomId,
+                                                        @DestinationVariable("member_id") String memberId){
     return new DefaultTextMessage("send your personal messages here", DefaultAppProperties.DEFAULT_URL.getName());
 }
 @SubscribeMapping(FETCH_CREATE_GAME_ROOM_EVENT) public GameRoom fetchCreateGameRoomEvent(){
@@ -92,15 +83,18 @@ public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
                 .chat(gameRoom)
                 .message(player.getName() + " joined the room")
                 .build());
-    } catch (AppException e) {
-        throw new RoomException(e.getMessage(),sessionId,roomId,e);
-    }
     gameRoomService.save(gameRoom);
     gameRoomService.sendChatEvent(roomId, MemberJoinGameRoomEvent.builder()
             .user(player)
             .chat(gameRoom)
             .message(player.getName() + " joined the room")
             .build());
+
+    if (gameRoom.isRoomSizeLimitReached()) gameProcessService.startGame(gameRoom);
+
+    } catch (AppException e) {
+        throw new RoomException(e.getMessage(),sessionId,roomId,e);
+    }
     return gameRoom;
 }
 
@@ -110,22 +104,16 @@ public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
         CreateRoomMessage message,
        @Header("simpSessionId") String sessionId
 ) throws RoomException {
-
     log.info("new Request for creating a room with sessionId "+ sessionId);
-
-    GameRoom gameRoom = null;
+    GameRoom gameRoom;
     try {
         gameRoom = roomFactory.createRoom(message,sessionId, GameRoom.class);
     } catch (AppException e) {
        throw new RoomException(e.getMessage(),sessionId, null,e);
     }
-
     log.info("new room created"+ gameRoom);
-
     gameRoomService.save(gameRoom);
-
     messagingTemplate.convertAndSend(WebSocketConfig.TOPIC_DESTINATION_PREFIX+FETCH_CREATE_GAME_ROOM_EVENT,gameRoom);
-
     log.info("room sent to the topic");
 }
 

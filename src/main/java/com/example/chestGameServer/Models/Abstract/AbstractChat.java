@@ -51,7 +51,7 @@ public abstract class AbstractChat<M extends AbstractUser> implements Serializab
         this.members = members;
     }
 
-    protected boolean isRoomSizeLimitReached(){
+    public boolean isRoomSizeLimitReached(){
         if(members.size()==roomSizeLimit)return true;
     return false;
     }
