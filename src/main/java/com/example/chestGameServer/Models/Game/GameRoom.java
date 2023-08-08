@@ -2,6 +2,7 @@ package com.example.chestGameServer.Models.Game;
 
 import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Models.Abstract.AbstractChat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.redis.core.RedisHash;
@@ -12,6 +13,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @RedisHash("GameRooms")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GameRoom extends AbstractChat<Player> {
     public GameRoom(String name) {
         super();

@@ -3,6 +3,7 @@ package com.example.chestGameServer;
 import com.example.chestGameServer.Controllers.MainOptionsController;
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
 import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
+import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.configs.WebSocketConfig;
@@ -74,13 +75,14 @@ public class WsTests extends AbstractTestClass{
 @Test
 public void createRoomTest() throws Exception  {
 
-        StompSession session = client.getStompSession();
-    CreateRoomMessage createRoomMessage = new CreateRoomMessage("Zahodite_bratiya_igrat", 4, user.getId());
-    session.send(WebSocketConfig.APPLICATION_DESTINATION_PREFIX+GameRoomController.CREATE_GAME_ROOM, createRoomMessage);
+    StompSession session = client.getStompSession();
+    CreateRoomMessage createRoomMessage = new CreateRoomMessage("Zahodite_bratiya_igrat", 4, user.getId(),session.getSessionId());
+    session.send(GameRoomController.CREATE_GAME_ROOM, createRoomMessage);
          RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
-        session.subscribe(WebSocketConfig.TOPIC_DESTINATION_PREFIX+GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
+        session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
 
     byte[] payload= (byte[]) handler.getFuture().get();
+
     GameRoom responseGameRoom=mapper.readValue(payload, GameRoom.class);
     Assertions.assertEquals(createRoomMessage.getName(),responseGameRoom.getName(),"names should be equal");
     System.out.println("received payload:");
@@ -105,17 +107,16 @@ public void createRoomTest() throws Exception  {
 
         String sessionId=session.getSessionId();
 
-        CreateRoomMessage createRoomMessage = new CreateRoomMessage("newGameRoom", 7, sessionId);
+        CreateRoomMessage createRoomMessage = new CreateRoomMessage("newGameRoom", 7,user.getId(), sessionId);
         RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
-        session.send(WebSocketConfig.APPLICATION_DESTINATION_PREFIX+GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
+        session.send(GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
 
         log.info(sessionId);
 
         StompSession.Subscription subscription=session.subscribe(
-                WebSocketConfig.TOPIC_DESTINATION_PREFIX+ MemberWsController.FETCH_ROOM_EXCEPTIONS.replace("{username}",sessionId)
-                ,handler);
+                WsUtils.getCommonExceptionHandlingDestination(sessionId),handler);
+        session.send(GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
       log.info(subscription.getSubscriptionHeaders());
-        session.send(WebSocketConfig.APPLICATION_DESTINATION_PREFIX+GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
         byte[] payload= (byte[]) handler.getFuture().get();
         String message=mapper.readValue(payload, String.class);
         log.info(message);

@@ -6,6 +6,7 @@ import com.example.chestGameServer.Models.Abstract.AbstractChat;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.Game.Player;
+import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Services.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,24 +24,23 @@ public class RoomFactory {
     UserService userService;
     public <C extends AbstractChat> C createRoom(CreateRoomMessage message, String sessionId,Class<C> typeChatClass) throws FullChatException, UserNotFoundException {
 
-        userService.findById(message.getUserId());
+        User user=userService.findById(message.getUserId());
 
-        if(GameRoom.class.equals(typeChatClass)) return (C) createGameRoom(message,sessionId);
+        if(GameRoom.class.equals(typeChatClass)) return (C) createGameRoom(message,sessionId,user);
 
         return null;
     }
 
-    private GameRoom createGameRoom(CreateRoomMessage message,String sessionId) throws FullChatException {
+    private GameRoom createGameRoom(CreateRoomMessage message,String sessionId,User user) throws FullChatException {
 
         GameRoom gameRoom=new GameRoom(message.getName());
 
         gameRoom.setRoomSizeLimit(message.getRoomSizeLimit());
 
-        Player player=Player.builder()
-                .roomId(gameRoom.getId())
-                .cards(new ArrayList<>())
-                .sessionId(sessionId)
-                .build();
+        Player player=UserMapper.USER_MAPPER.toPlayer(UserMapper.USER_MAPPER.toUserDto(user));
+        player.setRoomId(gameRoom.getId());
+        player.setSessionId(sessionId);
+        player.setCards(new ArrayList<>());
 
         gameRoom.addMember(player);
 

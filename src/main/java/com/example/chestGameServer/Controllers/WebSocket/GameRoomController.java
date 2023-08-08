@@ -23,6 +23,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 
@@ -33,13 +34,13 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 @Log4j2
 public class GameRoomController {
-    public static final String CREATE_GAME_ROOM="/rooms/game/create";
-    public static final String FETCH_CREATE_GAME_ROOM_EVENT="rooms/game/events/create";
-    public static final String JOIN_ROOM="/rooms/game/{room_id}/member/{member_id}/join-room";
-    public static final String FETCH_PERSONAL_CARD_REQUESTS="rooms/game/{room_id}/member/{member_id}/card-request";
-    public static final String FETCH_ALL_CARD_REQUESTS="rooms/game/{room_id}/card-requests";
-    public static final String FETCH_ALL_GAME_CHAT_MESSAGES="rooms/game/{room_id}/chat-messages";
-    public static final String FETCH_PERSONAL_GAME_CHAT_MESSAGES="rooms/game/{room_id}/member/{member_id}/chat-messages";
+    public static final String CREATE_GAME_ROOM="/rooms.game.create";
+    public static final String FETCH_CREATE_GAME_ROOM_EVENT="/topic/rooms.game.events.create";
+    public static final String JOIN_ROOM="/rooms.game.{room_id}.member.{member_id}.join-room";
+    public static final String FETCH_PERSONAL_CARD_REQUESTS="/topic/rooms.game.{room_id}.member.{member_id}.card-requests";
+    public static final String FETCH_ALL_CARD_REQUESTS="/topic/rooms.game.{room_id}.card-requests";
+    public static final String FETCH_ALL_GAME_CHAT_MESSAGES="/topic/rooms.game.{room_id}.chat-messages";
+    public static final String FETCH_PERSONAL_GAME_CHAT_MESSAGES="/topic/rooms.game.{room_id}.member.{member_id}.chat-messages";
     GameProcessService gameProcessService;
     RoomFactory roomFactory;
     SimpMessagingTemplate messagingTemplate;
@@ -66,15 +67,18 @@ public DefaultTextMessage fetchPersonalGameChatMessages(@DestinationVariable("ro
     }
 @MessageMapping(JOIN_ROOM)
 public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
-                         @DestinationVariable("member_id") String memberId,
-                         @Header("simpSessionId") String sessionId) throws RoomException {
+                         @DestinationVariable("member_id") String memberId
+) throws RoomException {
     Player player;
     GameRoom gameRoom;
+    //TODO : use spring security to get sessionId;
+    String sessionId=memberId;
     try {
         gameRoom = gameRoomService.findById(roomId);
         User user = userService.findById(memberId);
         player = UserMapper.USER_MAPPER.toPlayer(UserMapper.USER_MAPPER.toUserDto(user));
         player.setRoomId(roomId);
+
         player.setSessionId(sessionId);
         gameRoom.addMember(player);
         gameRoomService.save(gameRoom);
@@ -93,7 +97,7 @@ public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
     if (gameRoom.isRoomSizeLimitReached()) gameProcessService.startGame(gameRoom);
 
     } catch (AppException e) {
-        throw new RoomException(e.getMessage(),sessionId,roomId,e);
+        throw new RoomException(e.getMessage(),e,roomId,sessionId);
     }
     return gameRoom;
 }
@@ -101,19 +105,19 @@ public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
 //TODO: peak name from Principal
 @MessageMapping(CREATE_GAME_ROOM)
     public void createRoom(
-        CreateRoomMessage message,
-       @Header("simpSessionId") String sessionId
-) throws RoomException {
+        CreateRoomMessage message
+) throws UserException{
+    String sessionId=message.getSessionId();
     log.info("new Request for creating a room with sessionId "+ sessionId);
     GameRoom gameRoom;
     try {
         gameRoom = roomFactory.createRoom(message,sessionId, GameRoom.class);
     } catch (AppException e) {
-       throw new RoomException(e.getMessage(),sessionId, null,e);
+       throw new UserException(e.getMessage(), e,sessionId);
     }
     log.info("new room created"+ gameRoom);
     gameRoomService.save(gameRoom);
-    messagingTemplate.convertAndSend(WebSocketConfig.TOPIC_DESTINATION_PREFIX+FETCH_CREATE_GAME_ROOM_EVENT,gameRoom);
+    messagingTemplate.convertAndSend(FETCH_CREATE_GAME_ROOM_EVENT,gameRoom);
     log.info("room sent to the topic");
 }
 

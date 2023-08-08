@@ -14,4 +14,5 @@ public class CreateRoomMessage {
 String name;
 int roomSizeLimit;
 String userId;
+String sessionId;
 }
