@@ -25,8 +25,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequiredArgsConstructor
 public class MainOptionsController {
     GameRoomService gameRoomService;
-    public static String makeJoinRoomLink(String roomId,String memberId){
-        return GameRoomController.JOIN_ROOM.replace("{room_id}",roomId).replace("{member_id}",memberId);
+    public static String makeJoinRoomLink(String roomId){
+        return GameRoomController.JOIN_ROOM.replace("{room_id}",roomId);
     }
     public static final String FETCH_ROOMS="/user/{user_id}/rooms/game_room/get_all";
     @GetMapping(FETCH_ROOMS)
@@ -34,7 +34,7 @@ public class MainOptionsController {
     public ResponseEntity<?> fetchGameRooms(@PathVariable("user_id")String userId){
         List<EntityModel<GameRoom>> rooms= ((List<GameRoom>) gameRoomService.findAll()).stream()
                 .map(room-> EntityModel.of(room,
-                        linkTo(GameRoomController.class).slash(makeJoinRoomLink(room.getId(),userId)).withRel("game_room_ws_subscribe_link")))
+                        linkTo(GameRoomController.class).slash(makeJoinRoomLink(room.getId())).withRel("game_room_ws_subscribe_link")))
                 .collect(Collectors.toList());
         return ResponseEntity.ok().body(
                 CollectionModel.of(rooms,linkTo(methodOn(MainOptionsController.class).fetchGameRooms(userId)).withSelfRel()));

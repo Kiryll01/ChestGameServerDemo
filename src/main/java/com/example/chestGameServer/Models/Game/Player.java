@@ -17,11 +17,15 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 public class Player extends AbstractUser {
+    boolean isTurn;
     String roomId;
     List<Card> cards;
     String sessionId;
     public void addCard(Card card){
         cards.add(card);
+    }
+    public void addCards(List<Card> cards){
+        cards.addAll(cards);
     }
 public void deleteCard(Card card){
         cards.remove(card);

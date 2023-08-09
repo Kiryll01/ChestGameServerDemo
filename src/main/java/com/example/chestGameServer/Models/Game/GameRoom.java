@@ -2,6 +2,7 @@ package com.example.chestGameServer.Models.Game;
 
 import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Models.Abstract.AbstractChat;
+import com.example.chestGameServer.Models.Game.Card.Card;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,7 +15,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @RedisHash("GameRooms")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
 public class GameRoom extends AbstractChat<Player> {
+    List<Card>deck;
     public GameRoom(String name) {
         super();
         super.setName(name);

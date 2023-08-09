@@ -15,6 +15,6 @@ public class WsUtils {
                 .replace("{user_id}", id);
     }
     public static String getEventHandlingDestination(String roomId){
-        return WebSocketConfig.TOPIC_DESTINATION_PREFIX +MemberWsController.FETCH_ROOM_EVENTS.replace("{room_id}",roomId);
+        return MemberWsController.FETCH_ROOM_EVENTS.replace("{room_id}",roomId);
     }
 }

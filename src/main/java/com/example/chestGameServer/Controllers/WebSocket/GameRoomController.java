@@ -36,9 +36,8 @@ import org.springframework.stereotype.Controller;
 public class GameRoomController {
     public static final String CREATE_GAME_ROOM="/rooms.game.create";
     public static final String FETCH_CREATE_GAME_ROOM_EVENT="/topic/rooms.game.events.create";
-    public static final String JOIN_ROOM="/rooms.game.{room_id}.member.{member_id}.join-room";
-    public static final String FETCH_PERSONAL_CARD_REQUESTS="/topic/rooms.game.{room_id}.member.{member_id}.card-requests";
-    public static final String FETCH_ALL_CARD_REQUESTS="/topic/rooms.game.{room_id}.card-requests";
+    public static final String JOIN_ROOM="/rooms.game.{room_id}.join-room";
+
     public static final String FETCH_ALL_GAME_CHAT_MESSAGES="/topic/rooms.game.{room_id}.chat-messages";
     public static final String FETCH_PERSONAL_GAME_CHAT_MESSAGES="/topic/rooms.game.{room_id}.member.{member_id}.chat-messages";
     GameProcessService gameProcessService;
@@ -46,13 +45,7 @@ public class GameRoomController {
     SimpMessagingTemplate messagingTemplate;
     UserService userService;
     GameRoomService gameRoomService;
-@SubscribeMapping(FETCH_PERSONAL_CARD_REQUESTS)
-public CardRequestMessage fetchPersonalCardRequests(@DestinationVariable("room_id") String roomId,
-                                                    @DestinationVariable("member_id") String memberId){return null;}
-@SubscribeMapping(FETCH_ALL_CARD_REQUESTS)
-public CardRequestMessage fetchAllCardRequests(@DestinationVariable("room_id") String roomId){
-return null;
-}
+
 @SubscribeMapping(FETCH_ALL_GAME_CHAT_MESSAGES)
 public DefaultTextMessage fetchAllGameChatMessages(@DestinationVariable("room_id") String roomId){
 return new DefaultTextMessage("send your messages for everybody here", DefaultAppProperties.DEFAULT_URL.getName());
@@ -65,13 +58,13 @@ public DefaultTextMessage fetchPersonalGameChatMessages(@DestinationVariable("ro
 @SubscribeMapping(FETCH_CREATE_GAME_ROOM_EVENT) public GameRoom fetchCreateGameRoomEvent(){
         return null;
     }
-@MessageMapping(JOIN_ROOM)
+    @MessageMapping(JOIN_ROOM)
 public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
-                         @DestinationVariable("member_id") String memberId
+                          String memberId
 ) throws RoomException {
     Player player;
     GameRoom gameRoom;
-    //TODO : use spring security to get sessionId;
+    //TODO : use spring security to get sessionId and find user by it;
     String sessionId=memberId;
     try {
         gameRoom = gameRoomService.findById(roomId);
@@ -87,12 +80,6 @@ public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
                 .chat(gameRoom)
                 .message(player.getName() + " joined the room")
                 .build());
-    gameRoomService.save(gameRoom);
-    gameRoomService.sendChatEvent(roomId, MemberJoinGameRoomEvent.builder()
-            .user(player)
-            .chat(gameRoom)
-            .message(player.getName() + " joined the room")
-            .build());
 
     if (gameRoom.isRoomSizeLimitReached()) gameProcessService.startGame(gameRoom);
 

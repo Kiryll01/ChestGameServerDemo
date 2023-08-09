@@ -4,6 +4,8 @@ import com.example.chestGameServer.Controllers.MainOptionsController;
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
 import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
 import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
+import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
+import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.configs.WebSocketConfig;
@@ -101,8 +103,7 @@ public void createRoomTest() throws Exception  {
     log.info(contentAsString);
 
     };
-    @Test
-    public void createBreakRoomTest() throws Exception {
+    @Test public void createBreakRoomTest() throws Exception {
         StompSession session = client.getStompSession();
 
         String sessionId=session.getSessionId();
@@ -123,11 +124,29 @@ public void createRoomTest() throws Exception  {
         Assertions.assertTrue(message.contains("this type of chat can contain only 2-4 members"));
     }
 
-
 @Test
 public void joinRoomTest() throws Exception{
+StompSession session=client.getStompSession();
 
-}
+    session.send(GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("newNewRoom", 4, user.getId(),session.getSessionId()));
+
+    RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
+    session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
+
+    byte[] payload= (byte[]) handler.getFuture().get();
+    GameRoom responseGameRoom=mapper.readValue(payload, GameRoom.class);
+
+    session.send(MainOptionsController.makeJoinRoomLink(responseGameRoom.getId()),user.getId());
+    RunStopFrameHandler handler2=new RunStopFrameHandler(new CompletableFuture<>());
+    session.subscribe(MemberWsController.FETCH_ROOM_EVENTS.replace("{room_id}",responseGameRoom.getId()),handler2);
+    byte[] payload2= (byte[]) handler2.getFuture().get();
+    ChatEvent<GameRoom> chatEvent=mapper.readValue(payload2, MemberJoinGameRoomEvent.class);
+
+    Assertions.assertEquals(chatEvent.getChat().getMembers().get(1).getName(),user.getName());
+    log.info(chatEvent.getChat().getMembers());
+
+
+    }
     @AfterAll
     public void tearDown() {
 gameRoomService.deleteAll();
