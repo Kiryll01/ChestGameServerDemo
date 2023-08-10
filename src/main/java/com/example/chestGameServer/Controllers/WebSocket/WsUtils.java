@@ -17,4 +17,7 @@ public class WsUtils {
     public static String getEventHandlingDestination(String roomId){
         return MemberWsController.FETCH_ROOM_EVENTS.replace("{room_id}",roomId);
     }
+    public static String getCardRequestDestination(String roomId,String receiptSessionId){
+        return GameProcessController.REQUEST_CARDS.replace("{room_id}",roomId).replace("{receipt_id}",receiptSessionId);
+    }
 }

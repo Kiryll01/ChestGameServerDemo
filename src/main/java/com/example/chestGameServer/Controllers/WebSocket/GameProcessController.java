@@ -30,17 +30,18 @@ import java.nio.file.AccessDeniedException;
 public class GameProcessController {
     public static final String FETCH_PERSONAL_CARD_REQUESTS="/topic/rooms.game.{room_id}.member.{member_id}.card-requests";
     public static final String FETCH_ALL_CARD_REQUESTS="/topic/rooms.game.{room_id}.card-requests";
-    public static final String REQUEST_CARDS="rooms.game.{room_id}.receipt.{receipt_id}.card-requests";
+    public static final String REQUEST_CARDS="/rooms.game.{room_id}.receipt.{receipt_id}.card-requests";
 
     GameProcessService gameProcessService;
     SimpMessagingTemplate messagingTemplate;
     UserService userService;
     GameRoomService gameRoomService;
-    @SubscribeMapping(FETCH_PERSONAL_CARD_REQUESTS)
-    public CardRequestSummary fetchPersonalCardRequests(@DestinationVariable("room_id") String roomId,
-                                                        @DestinationVariable("member_id") String memberId){return null;}
+//    @SubscribeMapping(FETCH_PERSONAL_CARD_REQUESTS)
+//    public CardRequestSummary fetchPersonalCardRequests(@DestinationVariable("room_id") String roomId,
+//                                                        @DestinationVariable("member_id") String memberId){return null;}
     @SubscribeMapping(FETCH_ALL_CARD_REQUESTS)
     public CardRequestSummary fetchCardRequests(@DestinationVariable("room_id") String roomId){
+        log.info("new client subscribed to fetch cardRequests");
         return null;
     }
 @MessageMapping(REQUEST_CARDS)
@@ -48,7 +49,7 @@ public class GameProcessController {
                              @DestinationVariable("receipt_id")String receiptSessionId,
                              CardRequestMessage requestMessage,
                              //TODO : replace
-                             @Header("simpSessionID") String requestSessionId
+                             @Header("simpSessionId") String requestSessionId
 ) throws RoomException{
        try {
            if(!gameRoomService.findById(roomId).getMembers().stream()

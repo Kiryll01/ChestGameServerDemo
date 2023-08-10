@@ -5,6 +5,7 @@ import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
 import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
 import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
 import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
+import com.example.chestGameServer.Models.DTO.Events.GameStartedEvent;
 import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
 import com.example.chestGameServer.Models.Game.GameRoom;
@@ -14,17 +15,11 @@ import lombok.extern.log4j.Log4j2;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.jupiter.api.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import org.springframework.data.redis.connection.Subscription;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
-
-import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -35,20 +30,16 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @Log4j2
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class WsTests extends AbstractTestClass{
+@FieldDefaults(level = AccessLevel.PROTECTED)
+public class GameRoomTests extends AbstractTestClass{
     WebClient client;
     @BeforeAll
     public void setupWebSockets() throws Exception {
@@ -128,7 +119,7 @@ public void createRoomTest() throws Exception  {
 public void joinRoomTest() throws Exception{
 StompSession session=client.getStompSession();
 
-    session.send(GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("newNewRoom", 4, user.getId(),session.getSessionId()));
+    session.send(GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("newNewRoom", 2, user.getId(),session.getSessionId()));
 
     RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
     session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
@@ -142,9 +133,14 @@ StompSession session=client.getStompSession();
     byte[] payload2= (byte[]) handler2.getFuture().get();
     ChatEvent<GameRoom> chatEvent=mapper.readValue(payload2, MemberJoinGameRoomEvent.class);
 
+
+
     Assertions.assertEquals(chatEvent.getChat().getMembers().get(1).getName(),user.getName());
     log.info(chatEvent.getChat().getMembers());
 
+    byte[] payload3= (byte[]) handler2.getFuture().get();
+    ChatEvent<GameRoom> chatEvent1=mapper.readValue(payload3, GameStartedEvent.class);
+    log.info(chatEvent1.getMessage());
 
     }
     @AfterAll
@@ -169,7 +165,7 @@ gameRoomService.deleteAll();
     @Data
     @AllArgsConstructor
     @FieldDefaults(level = AccessLevel.PRIVATE)
-    private class RunStopFrameHandler implements StompSessionHandler {
+    protected class RunStopFrameHandler implements StompSessionHandler {
         CompletableFuture<Object> future;
 
         @Override
@@ -187,7 +183,7 @@ gameRoomService.deleteAll();
 
             future.complete(o);
 
-            //future=new CompletableFuture<>();
+            future=new CompletableFuture<>();
         }
 
         @Override
@@ -213,7 +209,7 @@ gameRoomService.deleteAll();
     @Data
     @Builder
     @FieldDefaults(level = AccessLevel.PRIVATE)
-    private static class WebClient {
+    protected static class WebClient {
 
         WebSocketStompClient stompClient;
 

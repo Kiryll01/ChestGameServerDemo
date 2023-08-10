@@ -1,5 +1,6 @@
 package com.example.chestGameServer.Services;
 
+import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Exceptions.ObjectNotFoundException;
 import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import com.example.chestGameServer.Models.DTO.Events.GameStartedEvent;
@@ -27,21 +28,26 @@ import java.util.stream.Stream;
 public class GameProcessService {
     GameRoomService gameRoomService;
     SimpMessagingTemplate messagingTemplate;
-    public void startGame(GameRoom gameRoom)  {
+    public void startGame(GameRoom gameRoom) throws FullChatException {
         List<Card> deck= GameUtils.generateDeck();
         gameRoom.getMembers().forEach(player -> {
+            player.setCards(new ArrayList<>());
             for (int i = 0; i <4 ; i++) {
                 Card card=deck.remove(deck.size()-1);
                 player.addCard(card);
-            }
-        gameRoomService.sendChatEvent(gameRoom.getId(),GameStartedEvent.builder()
-                .chat(gameRoom)
-                .message("game was started at room : "+gameRoom.getName())
-                .build()
-        );
+            };
         });
+
         gameRoom.setDeck(deck);
         gameRoom.getMembers().get(0).setTurn(true);
+        gameRoomService.save(gameRoom);
+        GameRoom gameRoomToSend=gameRoom;
+        gameRoomToSend.setDeck(null);
+        List<Player>players=gameRoom.getMembers();
+        players.forEach(player -> player.setCards(null));
+        gameRoomToSend.setMembers(players);
+        gameRoomService.sendChatEvent(gameRoom.getId(),
+                new GameStartedEvent(gameRoomToSend,"game was started at room : "+gameRoomToSend.getName()));
     }
     public CardResponseMessage requestCards(CardRequestMessage requestMessage, String roomId, String receiptSessionID, String requestingSessionID) throws ObjectNotFoundException {
         GameRoom gameRoom=gameRoomService.findById(roomId);

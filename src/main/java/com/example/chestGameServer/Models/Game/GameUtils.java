@@ -17,7 +17,8 @@ List<Card> deck=new ArrayList<>(52);
                 .forEach(suit -> Arrays.stream(CardValue.values())
                         .forEach(cardValue -> deck.add(new Card(cardValue,suit))));
         List<Card> sortedDeck=new ArrayList<>(52);
-        sortedDeck.add(deck.get(ThreadLocalRandom.current().nextInt(deck.size())));
+        for (int i = 0; i < 52 ; i++) {
+        sortedDeck.add(deck.remove(ThreadLocalRandom.current().nextInt(deck.size())));}
     return sortedDeck;
     }
 
