@@ -94,7 +94,8 @@ public void createRoomTest() throws Exception  {
     log.info(contentAsString);
 
     };
-    @Test public void createBreakRoomTest() throws Exception {
+    @Test
+    public void createBreakRoomTest() throws Exception {
         StompSession session = client.getStompSession();
 
         String sessionId=session.getSessionId();

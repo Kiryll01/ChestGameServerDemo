@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
-@AllArgsConstructor
+//@AllArgsConstructor
 @NoArgsConstructor
 @Entity(name = "_user")
 @ToString(callSuper = true)
@@ -23,10 +23,15 @@ public class User extends AbstractUser {
 @JsonManagedReference
 @JoinColumn(name = "user_stats_id")
 UserStats userStats;
-
+String pass;
     public User(UserStats userStats,String name) {
         super(name);
         this.userStats = userStats;
+    }
 
+    public User(String name, UserStats userStats, String pass) {
+        super(name);
+        this.userStats = userStats;
+        this.pass = pass;
     }
 }

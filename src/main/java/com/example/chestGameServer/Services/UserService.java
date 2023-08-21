@@ -37,4 +37,11 @@ public void deleteById(String id){
 public User findById(String id) throws UserNotFoundException {
    return userRepository.findById(id).orElseThrow( ()-> new UserNotFoundException("",id) );
 }
+    public User findUserByNameAndPass(String name,String pass){
+        return userRepository.findUserByNameAndPass(name,pass);
+    }
+    public User findUserByName(String name)  {
+        User user=userRepository.findUserByName(name);
+        return user;
+    }
 }

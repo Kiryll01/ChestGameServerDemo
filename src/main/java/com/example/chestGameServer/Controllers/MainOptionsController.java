@@ -1,8 +1,13 @@
 package com.example.chestGameServer.Controllers;
 
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
+import com.example.chestGameServer.Exceptions.UserNotFoundException;
+import com.example.chestGameServer.Models.DTO.UserDTO;
+import com.example.chestGameServer.Models.Factories.UserMapper;
 import com.example.chestGameServer.Models.Game.GameRoom;
+import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Services.GameRoomService;
+import com.example.chestGameServer.Services.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,7 +33,18 @@ public class MainOptionsController {
     public static String makeJoinRoomLink(String roomId){
         return GameRoomController.JOIN_ROOM.replace("{room_id}",roomId);
     }
+    UserService userService;
     public static final String FETCH_ROOMS="/user/{user_id}/rooms/game_room/get_all";
+    public static final String RETRIEVE_USER="/user/{username}/get";
+    public static final String GET_ACCOUNT_INFO="/user/get_info";
+
+    @GetMapping(RETRIEVE_USER)
+    public ResponseEntity<UserDTO> retrieveUser(@PathVariable("username") String userName) throws UserNotFoundException {
+        User user=userService.findUserByName(userName);
+        if(user==null)throw new UserNotFoundException("user not found",userName);
+        return ResponseEntity.ok()
+                .body(UserMapper.USER_MAPPER.toUserDto(user));
+    }
     @GetMapping(FETCH_ROOMS)
     @ResponseBody
     public ResponseEntity<?> fetchGameRooms(@PathVariable("user_id")String userId){

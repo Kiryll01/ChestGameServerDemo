@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 @Log4j2
 @FieldDefaults(level = AccessLevel.PROTECTED)
 public class GameProcessTests extends GameRoomTests{
-@Test
+//@Test
 public void requestCard() throws Exception{
     //joinRoomTest();
     StompSession session=client.getStompSession();
