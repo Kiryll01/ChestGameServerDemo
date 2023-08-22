@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
+import java.util.List;
+
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 @RequiredArgsConstructor
@@ -37,11 +39,16 @@ public void deleteById(String id){
 public User findById(String id) throws UserNotFoundException {
    return userRepository.findById(id).orElseThrow( ()-> new UserNotFoundException("",id) );
 }
-    public User findUserByNameAndPass(String name,String pass){
-        return userRepository.findUserByNameAndPass(name,pass);
+    public User findUserByNameAndPass(String name,String pass) throws UserNotFoundException {
+        User user =userRepository.findUserByNameAndPass(name,pass);
+        if(user==null) throw new UserNotFoundException(name+" was not found", name+" "+pass);
+        return user;
     }
     public User findUserByName(String name)  {
         User user=userRepository.findUserByName(name);
         return user;
+    }
+    public List<User> getAll(){
+    return userRepository.findAll();
     }
 }

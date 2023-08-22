@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +37,16 @@ public class MainOptionsController {
     UserService userService;
     public static final String FETCH_ROOMS="/user/{user_id}/rooms/game_room/get_all";
     public static final String RETRIEVE_USER="/user/{username}/get";
+    public static final String FETCH_USERS="/user/get_all";
     public static final String GET_ACCOUNT_INFO="/user/get_info";
+
+    @GetMapping(FETCH_USERS)
+    public ResponseEntity<List<UserDTO>> fetchUsers(){
+        List<User> usersFromDb=userService.getAll();
+        List<UserDTO> userDTOS=new ArrayList<>(100);
+        usersFromDb.forEach(user -> userDTOS.add(UserMapper.USER_MAPPER.toUserDto(user)));
+        return ResponseEntity.ok(userDTOS);
+    }
 
     @GetMapping(RETRIEVE_USER)
     public ResponseEntity<UserDTO> retrieveUser(@PathVariable("username") String userName) throws UserNotFoundException {

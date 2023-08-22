@@ -1,6 +1,7 @@
 package com.example.chestGameServer.configs;
 
 import com.example.chestGameServer.Models.User.User;
+import com.example.chestGameServer.configs.MVC.HttpHandshakeInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -33,6 +34,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint(REGISTRY)
+                .addInterceptors(new HttpHandshakeInterceptor())
                 //.addInterceptors(new HttpHandshakeInterceptor())
                 .withSockJS();
     }

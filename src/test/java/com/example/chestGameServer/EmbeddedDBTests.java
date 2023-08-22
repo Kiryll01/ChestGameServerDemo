@@ -34,9 +34,11 @@ public class EmbeddedDBTests {
     }
     @Test
     public void testingFindUserByName(){
-        userRepository.save(userToSave);
-        User userFromDb=userRepository.findUserByName(userToSave.getName());
-        Assertions.assertNotNull(userFromDb);
-        Assertions.assertEquals(userFromDb,userToSave);
+       userRepository.save(userToSave);
+       User userFromDb=userRepository.findUserByName(userToSave.getName());
+       Assertions.assertNotNull(userFromDb);
+       Assertions.assertEquals(userFromDb,userToSave);
+    log.info(userFromDb);
+    log.info(userToSave);
     }
 }
