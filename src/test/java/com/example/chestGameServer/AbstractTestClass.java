@@ -61,6 +61,7 @@ public abstract class AbstractTestClass {
     user = User.builder()
             .name("max111")
             .userStats(new UserStats())
+            .pass("pass")
             .build();
     users=new ArrayList<>();
 

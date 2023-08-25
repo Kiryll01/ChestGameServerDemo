@@ -20,7 +20,7 @@ public class ProtectedPaths {
         config();
     }
     public static void config(){
-        protectedPaths.put(WebSocketConfig.REGISTRY,Set.of(UserRoles.ROLE_USER));
+        //protectedPaths.put(WebSocketConfig.REGISTRY,Set.of(UserRoles.ROLE_USER));
     
     }
 }

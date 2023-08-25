@@ -1,6 +1,7 @@
 package com.example.chestGameServer.configs.MVC;
 
 import com.example.chestGameServer.Controllers.UserController;
+import com.example.chestGameServer.Exceptions.ObjectNotFoundException;
 import com.example.chestGameServer.Models.DTO.UserPrincipal;
 import com.example.chestGameServer.Models.Enums.HttpAttributes;
 import com.example.chestGameServer.Models.User.UserRoles;
@@ -17,10 +18,15 @@ public class HttpAuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String requestUri=request.getRequestURL().toString();
-        String path=ProtectedPaths.protectedPaths.keySet().stream()
-            .filter(k->requestUri.contains(k))
-            .findAny().get();
-    if(path==null)return true;
+        String path;
+    try {
+        path = ProtectedPaths.protectedPaths.keySet().stream()
+                .filter(k -> requestUri.contains(k))
+                .findAny().orElseThrow(() -> new ObjectNotFoundException("1", "1", Object.class));
+    }
+    catch (ObjectNotFoundException e){
+        return true;
+    }
         Set<UserRoles> requiredRoles=ProtectedPaths.protectedPaths.get(path);
         HttpServletRequest httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         HttpSession httpSession = httpServletRequest.getSession(false);

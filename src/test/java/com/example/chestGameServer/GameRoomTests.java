@@ -1,6 +1,7 @@
 package com.example.chestGameServer;
 
 import com.example.chestGameServer.Controllers.MainOptionsController;
+import com.example.chestGameServer.Controllers.UserController;
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
 import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
 import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
@@ -8,6 +9,8 @@ import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
 import com.example.chestGameServer.Models.DTO.Events.GameStartedEvent;
 import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
+import com.example.chestGameServer.Models.DTO.Requests.AuthRequest;
+import com.example.chestGameServer.Models.Enums.HttpAttributes;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.configs.WebSocketConfig;
 import lombok.extern.log4j.Log4j2;
@@ -17,11 +20,13 @@ import lombok.experimental.FieldDefaults;
 
 import org.junit.jupiter.api.*;
 
+import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
 
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
@@ -52,8 +57,25 @@ public class GameRoomTests extends AbstractTestClass{
 
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
+        AuthRequest authRequest=new AuthRequest(user.getName(),user.getPass());
+//        String contentAsString = mockMvc
+//                .perform(MockMvcRequestBuilders.post(UserController.SIGN_IN)
+//                        .content(mapper.writeValueAsString(authRequest))
+//                        .contentType(MediaType.APPLICATION_JSON))
+//                .andExpect(status().isOk())
+//                .andReturn()
+//                .getResponse()
+//                .getContentAsString();
+        WebSocketHttpHeaders handshakeHeaders=new WebSocketHttpHeaders();
+        handshakeHeaders.add(HttpAttributes.USER_NAME.name(), user.getName());
+        handshakeHeaders.add(HttpAttributes.USER_PASS.name(), user.getPass());
+
+
+        StompHeaders connectHeaders=new StompHeaders();
+        connectHeaders.add(HttpAttributes.USER_NAME.name(), user.getName());
+        connectHeaders.add(HttpAttributes.USER_PASS.name(), user.getPass());
         StompSession stompSession = stompClient
-                .connect(wsUrl, new StompSessionHandlerAdapter() {})
+                .connect(wsUrl,handshakeHeaders,connectHeaders, new StompSessionHandlerAdapter() {})
                 .get(5, TimeUnit.SECONDS);
 
         //Thread.sleep(5000);

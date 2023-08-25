@@ -3,11 +3,14 @@ package com.example.chestGameServer.Controllers;
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
 import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import com.example.chestGameServer.Models.DTO.UserDTO;
+import com.example.chestGameServer.Models.DTO.UserPrincipal;
+import com.example.chestGameServer.Models.Enums.HttpAttributes;
 import com.example.chestGameServer.Models.Factories.UserMapper;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Services.GameRoomService;
 import com.example.chestGameServer.Services.UserService;
+import jakarta.servlet.http.HttpSession;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -66,4 +69,11 @@ public class MainOptionsController {
                 CollectionModel.of(rooms,linkTo(methodOn(MainOptionsController.class).fetchGameRooms(userId)).withSelfRel()));
 
     }
+    @GetMapping(GET_ACCOUNT_INFO)
+    public ResponseEntity<?> getAccountInfo(HttpSession httpSession) throws UserNotFoundException {
+        UserPrincipal userPrincipal=(UserPrincipal) httpSession.getAttribute(HttpAttributes.USER_PRINCIPAL.getName());
+        User user=userService.findById(userPrincipal.getUser().getId());
+    return ResponseEntity.ok(UserMapper.USER_MAPPER.toUserDto(user));
+    }
+
 }
