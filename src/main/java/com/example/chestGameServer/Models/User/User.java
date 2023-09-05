@@ -13,48 +13,72 @@ import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
-//@AllArgsConstructor
-@NoArgsConstructor
 @Entity(name = "_user")
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder()
 public class User extends AbstractUser {
-@OneToOne(cascade = CascadeType.ALL)
-@JsonManagedReference
-@JoinColumn(name = "user_stats_id")
-UserStats userStats;
-String pass;
-@JsonManagedReference
-@ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-@JoinTable(name = "user_with_authorities",
-joinColumns = @JoinColumn(name = "user_id"),
-inverseJoinColumns = @JoinColumn(name = "authorities_id"))
-Set<UserAuthority> userAuthorities;
-//    @PrePersist
-//    public void prePersist() {
-//        if(userAuthorities == null)
-//            userAuthorities =new HashSet<>();
-//        UserAuthority userAuthority=new UserAuthority();
-//        userAuthority.setUserRole(UserRoles.ROLE_USER);
-//        userAuthorities.add(userAuthority);
-//    }
-public Set<UserRoles> getRoles(){
-   Set<UserRoles> userRoles=new HashSet<>();
-   userAuthorities.forEach(userAuthority -> userRoles.add(userAuthority.getUserRole()));
-   return userRoles;
-}
-public void addRole(UserRoles userRoles){
-    userAuthorities.add(UserAuthority.builder().userRole(userRoles).build());
-}
-    public User(UserStats userStats,String name) {
+    @OneToOne(cascade = CascadeType.ALL)
+    @JsonManagedReference
+    @JoinColumn(name = "user_stats_id")
+    UserStats userStats;
+    String pass;
+    @JsonManagedReference
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(name = "user_with_authorities",
+            joinColumns = @JoinColumn(name = "user_id",referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "authorities_id",referencedColumnName = "id"))
+    Set<UserAuthority> userAuthorities;
+//TODO
+        @PrePersist
+    public void onPrePersist() {
+        if(userAuthorities == null)
+            userAuthorities =new HashSet<>();
+        UserAuthority userAuthority=new UserAuthority();
+        userAuthority.setUserRole(UserRoles.ROLE_USER);
+        setUserAuthorities(Set.of(userAuthority));
+    }
+    public Set<UserRoles> getRoles() {
+        Set<UserRoles> userRoles = new HashSet<>();
+        userAuthorities.forEach(userAuthority -> userRoles.add(userAuthority.getUserRole()));
+        return userRoles;
+    }
+
+    public void addRole(UserRoles userRoles) {
+        userAuthorities.add(UserAuthority.builder().userRole(userRoles).build());
+    }
+
+    public User() {
+        //setDefaultRole();
+    }
+
+    public User(UserStats userStats, String name) {
         super(name);
+        //setDefaultRole();
         this.userStats = userStats;
     }
 
     public User(String name, UserStats userStats, String pass) {
         super(name);
+        //setDefaultRole();
         this.userStats = userStats;
         this.pass = pass;
     }
+    private void setDefaultRole() {
+        UserAuthority userAuthority = new UserAuthority();
+        userAuthority.setUserRole(UserRoles.ROLE_USER);
+        userAuthorities = Set.of(userAuthority);
+    }
+//    public static abstract class UserBuilder<C extends User, B extends UserBuilder<C, B>>
+//            extends AbstractUserBuilder<C, B> {
+//private String name;
+//private Set<UserAuthority> userAuthorities;
+//        public B name(String name){
+//            this.name=name;
+////            UserAuthority userAuthority = new UserAuthority();
+////            userAuthority.setUserRole(UserRoles.ROLE_USER);
+////            this.userAuthorities=Set.of(userAuthority);
+//            return self();
+//        }
+//    }
 }

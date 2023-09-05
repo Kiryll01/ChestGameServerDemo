@@ -5,16 +5,18 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.SecondaryRow;
 
+import java.io.Serializable;
 import java.util.Set;
 
-@Entity
+@Entity(name = "_roles")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserAuthority {
+public class UserAuthority implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
@@ -22,6 +24,6 @@ public class UserAuthority {
     UserRoles userRole;
     @ManyToMany(mappedBy = "userAuthorities",cascade = CascadeType.ALL)
     @JsonBackReference
-   // @ToString.Exclude
+    @ToString.Exclude
     Set<User> user;
 }

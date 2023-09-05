@@ -57,7 +57,7 @@ public class GameRoomTests extends AbstractTestClass{
 
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
-        AuthRequest authRequest=new AuthRequest(user.getName(),user.getPass());
+//        AuthRequest authRequest=new AuthRequest(user.getName(),user.getPass());
 //        String contentAsString = mockMvc
 //                .perform(MockMvcRequestBuilders.post(UserController.SIGN_IN)
 //                        .content(mapper.writeValueAsString(authRequest))
