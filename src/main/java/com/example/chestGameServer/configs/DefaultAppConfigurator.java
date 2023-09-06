@@ -13,8 +13,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 
 import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Configuration
@@ -33,7 +35,7 @@ public class DefaultAppConfigurator {
     user = User.builder()
                 .name("testUser")
                 .userStats(new UserStats())
-                .userAuthorities(Collections.singleton(UserAuthority.builder().userRole(UserRoles.ROLE_ADMIN).build()))
+            .roles(Set.of(UserRoles.ROLE_USER))
                 .pass(pass)
                 .build();
     userService.save(user);

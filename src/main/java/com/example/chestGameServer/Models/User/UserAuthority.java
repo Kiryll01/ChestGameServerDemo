@@ -22,8 +22,8 @@ public class UserAuthority implements Serializable {
     String id;
     @Enumerated(EnumType.STRING)
     UserRoles userRole;
-    @ManyToMany(mappedBy = "userAuthorities",cascade = CascadeType.ALL)
-    @JsonBackReference
-    @ToString.Exclude
-    Set<User> user;
+//    @ManyToMany(mappedBy = "userAuthorities",cascade = CascadeType.ALL)
+//    @JsonBackReference
+//    @ToString.Exclude
+//    Set<User> user;
 }
