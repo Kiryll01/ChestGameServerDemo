@@ -4,6 +4,7 @@ import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import com.example.chestGameServer.Models.Abstract.AbstractChat;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
+import com.example.chestGameServer.Models.DTO.UserPrincipal;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Models.User.User;
@@ -22,11 +23,11 @@ import java.util.ArrayList;
 @Component
 public class RoomFactory {
     UserService userService;
-    public <C extends AbstractChat> C createRoom(CreateRoomMessage message, String sessionId,Class<C> typeChatClass) throws FullChatException, UserNotFoundException {
+    public <C extends AbstractChat> C createRoom(CreateRoomMessage message, UserPrincipal userPrincipal,Class<C> typeChatClass) throws FullChatException, UserNotFoundException {
 
-        User user=userService.findById(message.getUserId());
+        User user=userService.findById(userPrincipal.getUser().getId());
 
-        if(GameRoom.class.equals(typeChatClass)) return (C) createGameRoom(message,sessionId,user);
+        if(GameRoom.class.equals(typeChatClass)) return (C) createGameRoom(message,userPrincipal.getWsSessionId(),user);
 
         return null;
     }
@@ -44,7 +45,7 @@ public class RoomFactory {
 
         gameRoom.addMember(player);
 
-        gameRoom.setOwnerId(message.getUserId());
+        gameRoom.setOwnerId(user.getId());
 
         return gameRoom;
     }

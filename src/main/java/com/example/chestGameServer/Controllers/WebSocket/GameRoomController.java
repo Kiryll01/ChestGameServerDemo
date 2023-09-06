@@ -6,7 +6,9 @@ import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
 import com.example.chestGameServer.Models.DTO.Messages.DefaultTextMessage;
+import com.example.chestGameServer.Models.DTO.UserPrincipal;
 import com.example.chestGameServer.Models.Enums.DefaultAppProperties;
+import com.example.chestGameServer.Models.Enums.HttpAttributes;
 import com.example.chestGameServer.Models.Factories.RoomFactory;
 import com.example.chestGameServer.Models.Factories.UserMapper;
 import com.example.chestGameServer.Models.Game.GameRoom;
@@ -20,14 +22,14 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.*;
+import org.springframework.messaging.simp.SimpAttributes;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
-
-
-
 
 @Controller
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
@@ -60,15 +62,15 @@ public DefaultTextMessage fetchPersonalGameChatMessages(@DestinationVariable("ro
     }
     @MessageMapping(JOIN_ROOM)
 public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
-                          String memberId
+                         SimpMessageHeaderAccessor accessor
 ) throws RoomException {
     Player player;
     GameRoom gameRoom;
-    //TODO : use spring security to get sessionId and find user by it;
-    String sessionId=memberId;
+    UserPrincipal userPrincipal= (UserPrincipal) accessor.getSessionAttributes().get(HttpAttributes.USER_PRINCIPAL);
+    String sessionId=userPrincipal.getWsSessionId();
     try {
         gameRoom = gameRoomService.findById(roomId);
-        User user = userService.findById(memberId);
+        User user = userService.findById(userPrincipal.getUser().getId());
         player = UserMapper.USER_MAPPER.toPlayer(UserMapper.USER_MAPPER.toUserDto(user));
         player.setRoomId(roomId);
 
@@ -92,13 +94,16 @@ public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
 //TODO: peak name from Principal
 @MessageMapping(CREATE_GAME_ROOM)
     public void createRoom(
-        CreateRoomMessage message
+        CreateRoomMessage message,
+        StompHeaderAccessor accessor
 ) throws UserException{
-    String sessionId=message.getSessionId();
+    log.info(accessor.getHeader(SimpMessageHeaderAccessor.SESSION_ID_HEADER));
+    UserPrincipal user= (UserPrincipal) accessor.getSessionAttributes().get(HttpAttributes.USER_PRINCIPAL.getName());
+    String sessionId=user.getWsSessionId();
     log.info("new Request for creating a room with sessionId "+ sessionId);
     GameRoom gameRoom;
     try {
-        gameRoom = roomFactory.createRoom(message,sessionId, GameRoom.class);
+        gameRoom = roomFactory.createRoom(message,user, GameRoom.class);
     } catch (AppException e) {
        throw new UserException(e.getMessage(), e,sessionId);
     }

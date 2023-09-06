@@ -91,7 +91,7 @@ public class GameRoomTests extends AbstractTestClass{
 public void createRoomTest() throws Exception  {
 
     StompSession session = client.getStompSession();
-    CreateRoomMessage createRoomMessage = new CreateRoomMessage("Zahodite_bratiya_igrat", 4, user.getId(),session.getSessionId());
+    CreateRoomMessage createRoomMessage = new CreateRoomMessage("Zahodite_bratiya_igrat", 4);
     session.send(GameRoomController.CREATE_GAME_ROOM, createRoomMessage);
          RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
         session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
@@ -122,7 +122,7 @@ public void createRoomTest() throws Exception  {
 
         String sessionId=session.getSessionId();
 
-        CreateRoomMessage createRoomMessage = new CreateRoomMessage("newGameRoom", 7,user.getId(), sessionId);
+        CreateRoomMessage createRoomMessage = new CreateRoomMessage("newGameRoom", 7);
         RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
         session.send(GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
 
@@ -142,7 +142,7 @@ public void createRoomTest() throws Exception  {
 public void joinRoomTest() throws Exception{
 StompSession session=client.getStompSession();
 
-    session.send(GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("newNewRoom", 2, user.getId(),session.getSessionId()));
+    session.send(GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("newNewRoom", 2));
 
     RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
     session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);

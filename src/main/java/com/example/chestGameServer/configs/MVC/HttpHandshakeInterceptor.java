@@ -21,6 +21,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
+//TODO : not used, because name and pass are not passed as attributes
 @Log4j2
 @RequiredArgsConstructor
 public class HttpHandshakeInterceptor implements HandshakeInterceptor {

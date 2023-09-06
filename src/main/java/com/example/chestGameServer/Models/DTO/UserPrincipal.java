@@ -17,4 +17,11 @@ import java.util.Set;
 public class UserPrincipal  {
 UserDTO user;
 Set<UserRoles> userRoles;
+// set by the server
+String wsSessionId;
+
+    public UserPrincipal(UserDTO user, Set<UserRoles> userRoles) {
+        this.user = user;
+        this.userRoles = userRoles;
+    }
 }

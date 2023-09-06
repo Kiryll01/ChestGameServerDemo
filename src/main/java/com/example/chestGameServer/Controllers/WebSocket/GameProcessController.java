@@ -1,11 +1,11 @@
 package com.example.chestGameServer.Controllers.WebSocket;
 
-import com.example.chestGameServer.Exceptions.AppException;
 import com.example.chestGameServer.Exceptions.ObjectNotFoundException;
 import com.example.chestGameServer.Exceptions.RoomException;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestSummary;
 import com.example.chestGameServer.Models.DTO.Messages.CardResponseMessage;
+import com.example.chestGameServer.Models.Enums.HttpAttributes;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Services.GameProcessService;
 import com.example.chestGameServer.Services.GameRoomService;
@@ -17,11 +17,11 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 
-import java.nio.file.AccessDeniedException;
 
 @Controller
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
@@ -49,8 +49,10 @@ public class GameProcessController {
                              @DestinationVariable("receipt_id")String receiptSessionId,
                              CardRequestMessage requestMessage,
                              //TODO : replace
-                             @Header("simpSessionId") String requestSessionId
+                            // @Header("simpSessionId") String requestSessionId
+                             SimpMessageHeaderAccessor accessor
 ) throws RoomException{
+        String requestSessionId= (String) accessor.getSessionAttributes().get(HttpAttributes.USER_PRINCIPAL.getName());
        try {
            if(!gameRoomService.findById(roomId).getMembers().stream()
                    .filter(player -> player.isTurn())
