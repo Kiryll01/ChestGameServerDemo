@@ -19,6 +19,7 @@ import java.util.List;
 @Setter
 public class GameRoom extends AbstractChat<Player> {
     List<Card>deck;
+    boolean isGameStarted=false;
     public GameRoom(String name) {
         super();
         super.setName(name);

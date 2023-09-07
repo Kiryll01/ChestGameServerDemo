@@ -1,11 +1,14 @@
 package com.example.chestGameServer;
 
+import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
 import com.example.chestGameServer.Models.Enums.RedisKeys;
+import com.example.chestGameServer.Models.Factories.UserMapper;
 import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Models.User.UserStats;
 import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Models.Game.Player;
 import com.example.chestGameServer.Models.Game.GameRoom;
+import com.example.chestGameServer.Models.User.WsSession;
 import com.example.chestGameServer.Services.GameRoomService;
 import com.example.chestGameServer.Services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,10 +29,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Log4j2
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -71,16 +71,32 @@ public abstract class AbstractTestClass {
             new User(new UserStats(),"tanya162345")));
 
     players=new ArrayList<>();
+    Player lera=new Player("lera1313");
+    Player anton=new Player("anton1313");
+    Player tanya=new Player("tanya162345");
+    lera.setSessionId(UUID.randomUUID().toString());
+    anton.setSessionId(UUID.randomUUID().toString());
+    tanya.setSessionId(UUID.randomUUID().toString());
 
-    players.addAll(List.of(new Player("lera1313"),
-            new Player("anton1313"),
-            new Player("tanya162345")));
+    WsUtils.wsSessionsMap.put(lera.getSessionId(), WsSession.builder()
+                    .user(UserMapper.USER_MAPPER.toUserDto(lera))
+                    .build());
+    WsUtils.wsSessionsMap.put(anton.getSessionId(), WsSession.builder()
+            .user(UserMapper.USER_MAPPER.toUserDto(anton))
+            .build());
+    WsUtils.wsSessionsMap.put(tanya.getSessionId(), WsSession.builder()
+            .user(UserMapper.USER_MAPPER.toUserDto(tanya))
+            .build());
+
+    players.addAll(List.of(lera,anton,tanya));
 
    gameRoom = new GameRoom("testGameRoom");
 
     try {
         gameRoom.setRoomSizeLimit(4);
         gameRoom.setMembers(players);
+
+        gameRoomService.save(gameRoom);
     } catch (FullChatException e) {
         throw new RuntimeException(e);
     }

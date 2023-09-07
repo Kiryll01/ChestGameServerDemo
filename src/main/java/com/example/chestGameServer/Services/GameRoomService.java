@@ -1,11 +1,9 @@
 package com.example.chestGameServer.Services;
 
-import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
 import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
 import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Repositories.GameRoomRepository;
-import com.example.chestGameServer.configs.WebSocketConfig;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

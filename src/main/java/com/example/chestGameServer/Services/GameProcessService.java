@@ -1,5 +1,6 @@
 package com.example.chestGameServer.Services;
 
+import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
 import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Exceptions.ObjectNotFoundException;
 import com.example.chestGameServer.Exceptions.UserNotFoundException;
@@ -10,6 +11,7 @@ import com.example.chestGameServer.Models.Game.Card.Card;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.Game.GameUtils;
 import com.example.chestGameServer.Models.Game.Player;
+import com.example.chestGameServer.Models.User.WsSession;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Service
@@ -40,12 +43,14 @@ public class GameProcessService {
 
         gameRoom.setDeck(deck);
         gameRoom.getMembers().get(0).setTurn(true);
+        gameRoom.setGameStarted(true);
         gameRoomService.save(gameRoom);
         GameRoom gameRoomToSend=gameRoom;
         gameRoomToSend.setDeck(null);
         List<Player>players=gameRoom.getMembers();
         players.forEach(player -> player.setCards(null));
         gameRoomToSend.setMembers(players);
+        setStartGameStatus(gameRoom.getMembers());
         gameRoomService.sendChatEvent(gameRoom.getId(),
                 new GameStartedEvent(gameRoomToSend,"game was started at room : "+gameRoomToSend.getName()));
     }
@@ -94,5 +99,14 @@ public class GameProcessService {
         gameRoomService.save(gameRoom);
         return cardResponseMessage;
     }
+    private void setStartGameStatus(List<Player> players){
+        players.forEach(player -> {
+            WsSession session=WsUtils.wsSessionsMap.get(player.getSessionId());
+            session.setInGame(true);
+            WsUtils.wsSessionsMap.put(player.getSessionId(),session);
+        });
+
+    }
+
 
 }

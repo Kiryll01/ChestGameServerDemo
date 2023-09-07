@@ -21,7 +21,7 @@ import java.util.List;
 public class UserService {
     @EventListener(SessionConnectedEvent.class)
             public void sessionConnectedListener(SessionConnectedEvent event){
-       log.info("new connection established : ");
+       log.info("new connection established : "+ event.toString());
     }
     @EventListener(SessionSubscribeEvent.class)
     public void sessionConnectEvent(SessionSubscribeEvent event){

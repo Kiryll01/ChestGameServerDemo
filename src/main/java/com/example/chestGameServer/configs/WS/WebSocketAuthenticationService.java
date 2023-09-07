@@ -1,4 +1,4 @@
-package com.example.chestGameServer.configs;
+package com.example.chestGameServer.configs.WS;
 
 import com.example.chestGameServer.Exceptions.AppException;
 import com.example.chestGameServer.Exceptions.UserNotFoundException;

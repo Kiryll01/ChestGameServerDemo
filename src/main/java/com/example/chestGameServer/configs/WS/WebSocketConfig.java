@@ -1,4 +1,4 @@
-package com.example.chestGameServer.configs;
+package com.example.chestGameServer.configs.WS;
 
 import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Services.UserService;
@@ -35,7 +35,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableStompBrokerRelay(TOPIC_DESTINATION_PREFIX);
-        //config.setApplicationDestinationPrefixes(APPLICATION_DESTINATION_PREFIX);
+//.setRelayHost("localhost")
+//                .setClientLogin("guest")
+//                .setClientPasscode("guest")
+//                .setSystemLogin("guest")
+//                .setSystemPasscode("guest");
+        config.setApplicationDestinationPrefixes(APPLICATION_DESTINATION_PREFIX);
     }
     @Bean
     public HttpHandshakeInterceptor httpHandshakeInterceptor(){

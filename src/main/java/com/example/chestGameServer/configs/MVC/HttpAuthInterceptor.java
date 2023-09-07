@@ -5,6 +5,7 @@ import com.example.chestGameServer.Exceptions.ObjectNotFoundException;
 import com.example.chestGameServer.Models.DTO.UserPrincipal;
 import com.example.chestGameServer.Models.Enums.HttpAttributes;
 import com.example.chestGameServer.Models.User.UserRoles;
+import com.example.chestGameServer.configs.ProtectedPaths;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -20,14 +21,14 @@ public class HttpAuthInterceptor implements HandlerInterceptor {
         String requestUri=request.getRequestURL().toString();
         String path;
     try {
-        path = ProtectedPaths.protectedPaths.keySet().stream()
+        path = ProtectedPaths.protectedHttpPaths.keySet().stream()
                 .filter(k -> requestUri.contains(k))
                 .findAny().orElseThrow(() -> new ObjectNotFoundException("1", "1", Object.class));
     }
     catch (ObjectNotFoundException e){
         return true;
     }
-        Set<UserRoles> requiredRoles=ProtectedPaths.protectedPaths.get(path);
+        Set<UserRoles> requiredRoles=ProtectedPaths.protectedHttpPaths.get(path);
         HttpServletRequest httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         HttpSession httpSession = httpServletRequest.getSession(false);
         UserPrincipal userPrincipal= (UserPrincipal) httpSession.getAttribute(HttpAttributes.USER_PRINCIPAL.getName());

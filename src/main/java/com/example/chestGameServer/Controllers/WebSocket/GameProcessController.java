@@ -28,17 +28,15 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 @Log4j2
 public class GameProcessController {
-    public static final String FETCH_PERSONAL_CARD_REQUESTS="/topic/rooms.game.{room_id}.member.{member_id}.card-requests";
-    public static final String FETCH_ALL_CARD_REQUESTS="/topic/rooms.game.{room_id}.card-requests";
-    public static final String REQUEST_CARDS="/rooms.game.{room_id}.receipt.{receipt_id}.card-requests";
+    public static final String PATTERN="/rooms.game.process";
+    public static final String FETCH_PERSONAL_CARD_REQUESTS="/topic/rooms.game.process.room.{room_id}.member.{member_id}.card-requests";
+    public static final String FETCH_ALL_CARD_REQUESTS="/topic/rooms.game.process.room.{room_id}.card-requests";
+    public static final String REQUEST_CARDS="/rooms.game.process.room.{room_id}.receipt.{receipt_id}.card-requests";
 
     GameProcessService gameProcessService;
     SimpMessagingTemplate messagingTemplate;
     UserService userService;
     GameRoomService gameRoomService;
-//    @SubscribeMapping(FETCH_PERSONAL_CARD_REQUESTS)
-//    public CardRequestSummary fetchPersonalCardRequests(@DestinationVariable("room_id") String roomId,
-//                                                        @DestinationVariable("member_id") String memberId){return null;}
     @SubscribeMapping(FETCH_ALL_CARD_REQUESTS)
     public CardRequestSummary fetchCardRequests(@DestinationVariable("room_id") String roomId){
         log.info("new client subscribed to fetch cardRequests");

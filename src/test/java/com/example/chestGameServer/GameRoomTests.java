@@ -1,7 +1,6 @@
 package com.example.chestGameServer;
 
 import com.example.chestGameServer.Controllers.MainOptionsController;
-import com.example.chestGameServer.Controllers.UserController;
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
 import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
 import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
@@ -9,10 +8,9 @@ import com.example.chestGameServer.Models.DTO.Events.ChatEvent;
 import com.example.chestGameServer.Models.DTO.Events.GameStartedEvent;
 import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
-import com.example.chestGameServer.Models.DTO.Requests.AuthRequest;
 import com.example.chestGameServer.Models.Enums.HttpAttributes;
 import com.example.chestGameServer.Models.Game.GameRoom;
-import com.example.chestGameServer.configs.WebSocketConfig;
+import com.example.chestGameServer.configs.WS.WebSocketConfig;
 import lombok.extern.log4j.Log4j2;
 
 import lombok.*;
@@ -20,7 +18,6 @@ import lombok.experimental.FieldDefaults;
 
 import org.junit.jupiter.api.*;
 
-import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;

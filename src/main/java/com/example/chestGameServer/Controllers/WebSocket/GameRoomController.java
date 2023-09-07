@@ -3,32 +3,24 @@ package com.example.chestGameServer.Controllers.WebSocket;
 import com.example.chestGameServer.Exceptions.*;
 
 import com.example.chestGameServer.Models.DTO.Events.MemberJoinGameRoomEvent;
-import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CreateRoomMessage;
 import com.example.chestGameServer.Models.DTO.Messages.DefaultTextMessage;
-import com.example.chestGameServer.Models.DTO.UserPrincipal;
 import com.example.chestGameServer.Models.Enums.DefaultAppProperties;
-import com.example.chestGameServer.Models.Enums.HttpAttributes;
 import com.example.chestGameServer.Models.Factories.RoomFactory;
 import com.example.chestGameServer.Models.Factories.UserMapper;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.Game.Player;
-import com.example.chestGameServer.Models.User.User;
+import com.example.chestGameServer.Models.User.WsSession;
 import com.example.chestGameServer.Services.GameProcessService;
 import com.example.chestGameServer.Services.GameRoomService;
 import com.example.chestGameServer.Services.UserService;
-import com.example.chestGameServer.configs.WebSocketConfig;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.*;
-import org.springframework.messaging.simp.SimpAttributes;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -38,10 +30,10 @@ import org.springframework.stereotype.Controller;
 public class GameRoomController {
     public static final String CREATE_GAME_ROOM="/rooms.game.create";
     public static final String FETCH_CREATE_GAME_ROOM_EVENT="/topic/rooms.game.events.create";
-    public static final String JOIN_ROOM="/rooms.game.{room_id}.join-room";
+    public static final String JOIN_ROOM="/rooms.game.room.{room_id}.join-room";
 
-    public static final String FETCH_ALL_GAME_CHAT_MESSAGES="/topic/rooms.game.{room_id}.chat-messages";
-    public static final String FETCH_PERSONAL_GAME_CHAT_MESSAGES="/topic/rooms.game.{room_id}.member.{member_id}.chat-messages";
+    public static final String FETCH_ALL_GAME_CHAT_MESSAGES="/topic/rooms.game.room.{room_id}.chat-messages";
+    public static final String FETCH_PERSONAL_GAME_CHAT_MESSAGES="/topic/rooms.game.room.{room_id}.member.{member_id}.chat-messages";
     GameProcessService gameProcessService;
     RoomFactory roomFactory;
     SimpMessagingTemplate messagingTemplate;
@@ -60,20 +52,18 @@ public DefaultTextMessage fetchPersonalGameChatMessages(@DestinationVariable("ro
 @SubscribeMapping(FETCH_CREATE_GAME_ROOM_EVENT) public GameRoom fetchCreateGameRoomEvent(){
         return null;
     }
+   //TODO : forbid equal sessionIds to join one room
     @MessageMapping(JOIN_ROOM)
 public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
-                         SimpMessageHeaderAccessor accessor
+                         @Header("simpSessionId") String sessionId
 ) throws RoomException {
     Player player;
     GameRoom gameRoom;
-    UserPrincipal userPrincipal= (UserPrincipal) accessor.getSessionAttributes().get(HttpAttributes.USER_PRINCIPAL);
-    String sessionId=userPrincipal.getWsSessionId();
     try {
         gameRoom = gameRoomService.findById(roomId);
-        User user = userService.findById(userPrincipal.getUser().getId());
-        player = UserMapper.USER_MAPPER.toPlayer(UserMapper.USER_MAPPER.toUserDto(user));
+        WsSession session=WsUtils.wsSessionsMap.get(sessionId);
+        player=UserMapper.USER_MAPPER.toPlayer(session.getUser());
         player.setRoomId(roomId);
-
         player.setSessionId(sessionId);
         gameRoom.addMember(player);
         gameRoomService.save(gameRoom);
@@ -82,12 +72,12 @@ public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
                 .chat(gameRoom)
                 .message(player.getName() + " joined the room")
                 .build());
-
     if (gameRoom.isRoomSizeLimitReached()) gameProcessService.startGame(gameRoom);
-
     } catch (AppException e) {
         throw new RoomException(e.getMessage(),e,roomId,sessionId);
     }
+    setGameRoomIdToTheSessionMap(sessionId,gameRoom.getId());
+
     return gameRoom;
 }
 
@@ -95,22 +85,28 @@ public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
 @MessageMapping(CREATE_GAME_ROOM)
     public void createRoom(
         CreateRoomMessage message,
-        StompHeaderAccessor accessor
+        @Header("simpSessionId") String simpSessionId
 ) throws UserException{
-    log.info(accessor.getHeader(SimpMessageHeaderAccessor.SESSION_ID_HEADER));
-    UserPrincipal user= (UserPrincipal) accessor.getSessionAttributes().get(HttpAttributes.USER_PRINCIPAL.getName());
-    String sessionId=user.getWsSessionId();
-    log.info("new Request for creating a room with sessionId "+ sessionId);
+    log.info(simpSessionId);
+    log.info("new Request for creating a room with sessionId "+ simpSessionId);
     GameRoom gameRoom;
     try {
-        gameRoom = roomFactory.createRoom(message,user, GameRoom.class);
+        WsSession session=WsUtils.wsSessionsMap.get(simpSessionId);
+        gameRoom = roomFactory.createRoom(message,simpSessionId,session.getUser(), GameRoom.class);
     } catch (AppException e) {
-       throw new UserException(e.getMessage(), e,sessionId);
+       throw new UserException(e.getMessage(), e,simpSessionId);
     }
     log.info("new room created"+ gameRoom);
     gameRoomService.save(gameRoom);
     messagingTemplate.convertAndSend(FETCH_CREATE_GAME_ROOM_EVENT,gameRoom);
     log.info("room sent to the topic");
+    setGameRoomIdToTheSessionMap(simpSessionId, gameRoom.getId());
+}
+
+private void setGameRoomIdToTheSessionMap(String sessionId,String gameRoomId){
+WsSession session=WsUtils.wsSessionsMap.get(sessionId);
+session.setGameRoomId(gameRoomId);
+WsUtils.wsSessionsMap.put(sessionId,session);
 }
 
 }

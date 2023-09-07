@@ -1,4 +1,4 @@
-package com.example.chestGameServer.configs;
+package com.example.chestGameServer.configs.WS;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
