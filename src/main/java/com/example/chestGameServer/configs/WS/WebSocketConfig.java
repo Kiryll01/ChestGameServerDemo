@@ -40,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 //                .setClientPasscode("guest")
 //                .setSystemLogin("guest")
 //                .setSystemPasscode("guest");
-        config.setApplicationDestinationPrefixes(APPLICATION_DESTINATION_PREFIX);
+        //config.setApplicationDestinationPrefixes(APPLICATION_DESTINATION_PREFIX);
     }
     @Bean
     public HttpHandshakeInterceptor httpHandshakeInterceptor(){

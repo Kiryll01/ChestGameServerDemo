@@ -1,5 +1,6 @@
 package com.example.chestGameServer;
 
+import com.example.chestGameServer.Controllers.MainOptionsController;
 import com.example.chestGameServer.Controllers.WebSocket.GameProcessController;
 import com.example.chestGameServer.Controllers.WebSocket.GameRoomController;
 import com.example.chestGameServer.Controllers.WebSocket.MemberWsController;
@@ -31,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 public class GameProcessTests extends GameRoomTests{
     @Autowired
     GameProcessService gameProcessService;
+    GameRoom gameRoom;
     @BeforeAll
     public void startGameTest() throws Exception{
 
@@ -42,9 +44,9 @@ public class GameProcessTests extends GameRoomTests{
 
        // session.subscribe(WsUtils.getEventHandlingDestination(gameRoom.getId()),handler);
 
-        session.send(GameRoomController.JOIN_ROOM.replace("{room_id}",gameRoom.getId()),null);
+        session.send(MainOptionsController.makeJoinRoomLink(gameRoom.getId()),null);
 
-       Thread.sleep(5000);
+       Thread.sleep(1000);
         // handler.getFuture().get();
 
         GameRoom gameStartedGameRoom=gameRoomService.findById(gameRoom.getId());
@@ -53,29 +55,30 @@ public class GameProcessTests extends GameRoomTests{
 
         gameStartedGameRoom.getMembers().forEach(player ->{
             WsSession playerSession=WsUtils.wsSessionsMap.get(player.getSessionId());
-            Assertions.assertEquals(playerSession.getGameRoomId(),gameRoom.getId(),playerSession.getUser().getName()+" has different gameRoomId");
             Assertions.assertTrue(playerSession.isInGame(),playerSession.getUser().getName()+" is not in game");
         });
+        String simpSessionId =gameStartedGameRoom.getMembers().stream().filter(player -> player.getName().equals(user.getName())).findAny().get().getSessionId();
+        WsSession currentSession=WsUtils.wsSessionsMap.get(simpSessionId);
+        Assertions.assertEquals(gameStartedGameRoom.getId(),currentSession.getGameRoomId(),currentSession.getUser().getName()+" has different gameRoomId");
 
         Assertions.assertTrue(gameStartedGameRoom.isGameStarted());
         gameStartedGameRoom.getMembers().forEach(player -> Assertions.assertEquals(4,player.getCards().size()));
         Assertions.assertEquals(52-(gameStartedGameRoom.getMembers().size()*4),gameStartedGameRoom.getDeck().size());
+        gameRoom=gameStartedGameRoom;
     }
 @Test
 public void startGame() throws Exception{
+    StompSession session=client.getStompSession();
 
+    session.send(WsUtils.getCardRequestDestination(gameRoom.getId(),user.getId()),
+            new CardRequestMessage(CardValue.ACE,2, List.of(Suit.CLUBS,Suit.HEARTS)));
+    RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
+    session.subscribe(GameProcessController.FETCH_ALL_CARD_REQUESTS
+            .replace("{room_id}",gameRoom.getId()),
+            handler);
+    byte[] payload= (byte[]) handler.getFuture().get();
 
-
-
-//    StompSession.Receiptable receiptable=session.send(WsUtils.getCardRequestDestination(gameRoom.getId(),user.getId()),
-//            new CardRequestMessage(CardValue.ACE,2, List.of(Suit.CLUBS,Suit.HEARTS)));
-//    RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
-//    StompSession.Subscription subscription=session.subscribe(GameProcessController.FETCH_ALL_CARD_REQUESTS
-//            .replace("{room_id}",gameRoom.getId()),
-//            handler);
-//    byte[] payload= (byte[]) handler.getFuture().get();
-//
-//    CardRequestSummary response =mapper.readValue(payload, CardRequestSummary.class);
-//    log.info(response);
+    CardRequestSummary response =mapper.readValue(payload, CardRequestSummary.class);
+    log.info(response);
 }
 }

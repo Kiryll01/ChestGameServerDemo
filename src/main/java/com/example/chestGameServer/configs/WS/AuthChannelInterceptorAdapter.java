@@ -35,7 +35,7 @@ public class AuthChannelInterceptorAdapter implements ChannelInterceptor {
     @Override
     public Message<?> preSend(final Message<?> message, final MessageChannel channel) {
         final StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-      log.info(accessor.getHeader(SimpMessageHeaderAccessor.SESSION_ID_HEADER));
+      //log.info(accessor.getHeader(SimpMessageHeaderAccessor.SESSION_ID_HEADER));
         if (StompCommand.CONNECT ==accessor.getCommand()) {
             final String username = accessor.getFirstNativeHeader(HttpAttributes.USER_NAME.name());
             final String password = accessor.getFirstNativeHeader(HttpAttributes.USER_PASS.name());

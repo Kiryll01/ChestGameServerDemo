@@ -32,7 +32,9 @@ public class GameProcessController {
     public static final String FETCH_PERSONAL_CARD_REQUESTS="/topic/rooms.game.process.room.{room_id}.member.{member_id}.card-requests";
     public static final String FETCH_ALL_CARD_REQUESTS="/topic/rooms.game.process.room.{room_id}.card-requests";
     public static final String REQUEST_CARDS="/rooms.game.process.room.{room_id}.receipt.{receipt_id}.card-requests";
-
+public static String getRequestCardDestination(String roomId,String receiptId){
+    return REQUEST_CARDS.replace("{room_id}",roomId).replace("{receipt_id}",receiptId);
+}
     GameProcessService gameProcessService;
     SimpMessagingTemplate messagingTemplate;
     UserService userService;

@@ -54,7 +54,8 @@ public DefaultTextMessage fetchPersonalGameChatMessages(@DestinationVariable("ro
     }
    //TODO : forbid equal sessionIds to join one room
     @MessageMapping(JOIN_ROOM)
-public GameRoom joinRoom(@DestinationVariable("room_id") String roomId,
+public GameRoom joinRoom(
+        @DestinationVariable("room_id") String roomId,
                          @Header("simpSessionId") String sessionId
 ) throws RoomException {
     Player player;
