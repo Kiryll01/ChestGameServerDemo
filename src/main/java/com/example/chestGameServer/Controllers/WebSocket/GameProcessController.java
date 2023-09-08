@@ -32,8 +32,8 @@ public class GameProcessController {
     public static final String FETCH_PERSONAL_CARD_REQUESTS="/topic/rooms.game.process.room.{room_id}.member.{member_id}.card-requests";
     public static final String FETCH_ALL_CARD_REQUESTS="/topic/rooms.game.process.room.{room_id}.card-requests";
     public static final String REQUEST_CARDS="/rooms.game.process.room.{room_id}.receipt.{receipt_id}.card-requests";
-public static String getRequestCardDestination(String roomId,String receiptId){
-    return REQUEST_CARDS.replace("{room_id}",roomId).replace("{receipt_id}",receiptId);
+public static String getFetchCardsDestination(String roomId){
+    return FETCH_ALL_CARD_REQUESTS.replace("{room_id}",roomId);
 }
     GameProcessService gameProcessService;
     SimpMessagingTemplate messagingTemplate;
@@ -48,11 +48,8 @@ public static String getRequestCardDestination(String roomId,String receiptId){
     public void requestCards(@DestinationVariable("room_id")String roomId,
                              @DestinationVariable("receipt_id")String receiptSessionId,
                              CardRequestMessage requestMessage,
-                             //TODO : replace
-                            // @Header("simpSessionId") String requestSessionId
-                             SimpMessageHeaderAccessor accessor
+                             @Header("simpSessionId") String requestSessionId
 ) throws RoomException{
-        String requestSessionId= (String) accessor.getSessionAttributes().get(HttpAttributes.USER_PRINCIPAL.getName());
        try {
            if(!gameRoomService.findById(roomId).getMembers().stream()
                    .filter(player -> player.isTurn())

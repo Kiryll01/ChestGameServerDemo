@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -60,34 +61,35 @@ public class GameProcessService {
         Player requestingPlayer= getPlayerBySessionId(requestingSessionID, gameRoom);
         List<Card> receiptCards=receiptPlayer.getCards();
         CardResponseMessage cardResponseMessage =new CardResponseMessage();
-        Stream<Card> cardStream=receiptCards.stream()
-                .filter(card -> card.getCardValue().equals(requestMessage.getCardValue()));
-        long cardCount=cardStream.count();
+       List<Card> rightCards= receiptCards.stream()
+                .filter(card -> card.getCardValue().equals(requestMessage.getCardValue())).collect(Collectors.toList());
+        long cardCount=rightCards.size();
         if(cardCount!=0) cardResponseMessage.setCardValuePresent(true);
         else return changeTurn(gameRoom, requestingPlayer, cardResponseMessage);
-            if(cardCount==requestMessage.getCardCount()) cardResponseMessage.setCardCountPresent(true);
+        if(cardCount==requestMessage.getCardCount()) cardResponseMessage.setCardCountPresent(true);
         else return  changeTurn(gameRoom, requestingPlayer, cardResponseMessage);
-        if(!cardStream.anyMatch(card -> !requestMessage.getSuits().stream()
-               .anyMatch(requestCard->
-                       card.getSuit().equals(requestCard.getSuit())))) cardResponseMessage.setCardSuitsPresent(true);
-        else return changeTurn(gameRoom, requestingPlayer, cardResponseMessage);
+
+        for (Card card : rightCards) {
+           if(!requestMessage.getSuits().stream().anyMatch(suit -> card.getSuit().equals(suit)))
+               return changeTurn(gameRoom, requestingPlayer, cardResponseMessage);
+        }
+        cardResponseMessage.setCardSuitsPresent(true);
         List<Card> cardsToRemove=new ArrayList<>();
         requestMessage.getSuits().forEach(suit -> cardsToRemove.add(new Card(requestMessage.getCardValue(),suit)));
         receiptPlayer.getCards().removeAll(cardsToRemove);
         requestingPlayer.addCards(cardsToRemove);
-        int cardSize=receiptPlayer.getCards().size();
-        int deckSize=gameRoom.getDeck().size();
-        if(cardSize<4)while(cardSize!=4 || deckSize!=0){
+        if(receiptPlayer.getCards().size()<4)while(receiptPlayer.getCards().size()!=4 && gameRoom.getDeck().size()!=0){
            receiptPlayer.addCard(gameRoom.getDeck().remove(gameRoom.getDeck().size()-1));
         }
-        gameRoomService.save(gameRoom);
-        return cardResponseMessage;
+//        gameRoom.updateMember(receiptPlayer);
+//        gameRoom.updateMember(requestingPlayer);
+        return changeTurn(gameRoom,requestingPlayer,cardResponseMessage);
     }
-    private Player getPlayerBySessionId(String requestingSessionID, GameRoom gameRoom) throws UserNotFoundException {
+    private Player getPlayerBySessionId(String sessionID, GameRoom gameRoom) throws UserNotFoundException {
         return gameRoom.getMembers().stream()
-                .filter(o -> o.getSessionId().equals(requestingSessionID))
+                .filter(o -> o.getSessionId().equals(sessionID))
                 .findAny()
-                .orElseThrow(() -> new UserNotFoundException("sessionId is wrong", requestingSessionID));
+                .orElseThrow(() -> new UserNotFoundException("sessionId is wrong", sessionID));
     }
     private CardResponseMessage changeTurn(GameRoom gameRoom, Player requestingPlayer, CardResponseMessage cardResponseMessage) {
         int requestPlayerIndex= gameRoom.getMembers().indexOf(requestingPlayer);

@@ -7,6 +7,7 @@ import com.example.chestGameServer.Exceptions.ObjectNotFoundException;
 import com.example.chestGameServer.Exceptions.RoomNotFoundException;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.User.WsSession;
+import com.example.chestGameServer.Repositories.GameRoomRepository;
 import com.example.chestGameServer.Services.GameRoomService;
 import com.example.chestGameServer.configs.ProtectedPaths;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +20,14 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
+import java.util.NoSuchElementException;
+
 @Component
 @RequiredArgsConstructor
 @Log4j2
 public class GameProcessCheckingInterceptor implements ChannelInterceptor {
-    GameRoomService gameRoomService;
+    // gameRoomService forms a cycle. due to messagingTemplate, I guess.
+    private final GameRoomRepository gameRoomRepository;
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor= MessageHeaderAccessor.getAccessor(message,StompHeaderAccessor.class);
@@ -35,8 +39,8 @@ public class GameProcessCheckingInterceptor implements ChannelInterceptor {
         String roomId=WsUtils.getRoomId(accessor.getDestination());
         GameRoom gameRoom;
         try {
-                gameRoom=gameRoomService.findById(roomId);
-            } catch (RoomNotFoundException e) {
+                gameRoom=gameRoomRepository.findById(roomId).orElseThrow();
+            } catch (NoSuchElementException e) {
                 throw new AppMessageException(message,e);
             }
         if(!gameRoom.isGameStarted())throw new AppMessageException(message,new GameProcessException("game was not started",roomId,accessor.getDestination()));

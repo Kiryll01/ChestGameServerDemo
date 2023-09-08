@@ -27,7 +27,7 @@ public class Player extends AbstractUser {
     }
 
     public void addCards(List<Card> cards){
-        cards.addAll(cards);
+        this.cards.addAll(cards);
     }
 public void deleteCard(Card card){
         cards.remove(card);

@@ -9,6 +9,7 @@ import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestSummary;
 import com.example.chestGameServer.Models.DTO.Messages.CardResponseMessage;
+import com.example.chestGameServer.Models.Game.Card.Card;
 import com.example.chestGameServer.Models.Game.Card.CardValue;
 import com.example.chestGameServer.Models.Game.Card.Suit;
 import com.example.chestGameServer.Models.Game.GameRoom;
@@ -32,7 +33,7 @@ import java.util.concurrent.ExecutionException;
 public class GameProcessTests extends GameRoomTests{
     @Autowired
     GameProcessService gameProcessService;
-    GameRoom gameRoom;
+    GameRoom startedGameRoom;
     @BeforeAll
     public void startGameTest() throws Exception{
 
@@ -64,21 +65,82 @@ public class GameProcessTests extends GameRoomTests{
         Assertions.assertTrue(gameStartedGameRoom.isGameStarted());
         gameStartedGameRoom.getMembers().forEach(player -> Assertions.assertEquals(4,player.getCards().size()));
         Assertions.assertEquals(52-(gameStartedGameRoom.getMembers().size()*4),gameStartedGameRoom.getDeck().size());
-        gameRoom=gameStartedGameRoom;
+        startedGameRoom=gameStartedGameRoom;
+        log.info(startedGameRoom);
+    }
+// TODO : check the answer
+    @Test
+    public void requestCardLogicTest()throws Exception{
     }
 @Test
-public void startGame() throws Exception{
+public void requestCardTest() throws Exception{
     StompSession session=client.getStompSession();
 
-    session.send(WsUtils.getCardRequestDestination(gameRoom.getId(),user.getId()),
-            new CardRequestMessage(CardValue.ACE,2, List.of(Suit.CLUBS,Suit.HEARTS)));
+    startedGameRoom.getMembers().forEach(player -> player.setTurn(false));
+    startedGameRoom.getMembers().get(3).setTurn(true);
+    gameRoomService.save(startedGameRoom);
+//    session.send(WsUtils.getCardRequestDestination(startedGameRoom.getId(),players.get(0).getSessionId()),
+//            new CardRequestMessage(CardValue.ACE,2, List.of(Suit.CLUBS,Suit.HEARTS)));
     RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
-    session.subscribe(GameProcessController.FETCH_ALL_CARD_REQUESTS
-            .replace("{room_id}",gameRoom.getId()),
+    session.subscribe(GameProcessController.getFetchCardsDestination(startedGameRoom.getId()),
             handler);
-    byte[] payload= (byte[]) handler.getFuture().get();
+   // byte[] payload= (byte[]) handler.getFuture().get();
 
-    CardRequestSummary response =mapper.readValue(payload, CardRequestSummary.class);
-    log.info(response);
-}
+//    CardRequestSummary response =mapper.readValue(payload, CardRequestSummary.class);
+//    GameRoom startedGameRoom=gameRoomService.findById(gameRoom.getId());
+//    Assertions.assertTrue(startedGameRoom.getMembers().get(0).isTurn(),"first player should have turn now");
+//    if(response.getCardResponseMessage().isCardCountPresent()==false || response.getCardResponseMessage().isCardSuitsPresent()==false ||
+//    response.getCardResponseMessage().isCardValuePresent()==false) {
+//        Assertions.assertEquals(52-startedGameRoom.getMembers().size()*4,startedGameRoom.getDeck().size());
+//        startedGameRoom.getMembers().forEach(player->Assertions.assertEquals(4,player.getCards().size()));
+//    }
+//
+//    startedGameRoom.getMembers().forEach(player -> player.setTurn(false));
+//    startedGameRoom.getMembers().get(3).setTurn(true);
+
+    List<Card> cards=startedGameRoom.getMembers().get(0).getCards();
+
+    Card nonRepetitiveCard=null;
+    for (int i=0;i<cards.size();i++) {
+        nonRepetitiveCard=cards.get(i);
+        for(int j=i+1;j<cards.size();j++){
+            if(cards.get(i).getCardValue().equals(cards.get(j).getCardValue())){
+                nonRepetitiveCard=null;
+                break;
+            }
+            if(nonRepetitiveCard!=null)break;
+       }
+    }
+    log.info(startedGameRoom.getMembers().get(0).getCards());
+    if(nonRepetitiveCard==null){
+        log.info("there no non-repetitive cards, restart test");
+        return;
+    }
+
+    CardRequestMessage cardRequestOfRightCard= new CardRequestMessage(nonRepetitiveCard.getCardValue(),1,List.of(nonRepetitiveCard.getSuit()));
+    session.send(WsUtils.getCardRequestDestination(startedGameRoom.getId(),players.get(0).getSessionId()),
+            cardRequestOfRightCard);
+
+    byte[] payloadOfRightCard= (byte[]) handler.getFuture().get();
+    CardRequestSummary responseOfRightCard =mapper.readValue(payloadOfRightCard, CardRequestSummary.class);
+    log.info(responseOfRightCard);
+
+    startedGameRoom=gameRoomService.findById(gameRoom.getId());
+
+    Assertions.assertEquals(cardRequestOfRightCard,responseOfRightCard.getCardRequestMessage());
+    Assertions.assertTrue(responseOfRightCard.getCardResponseMessage().isCardCountPresent());
+    Assertions.assertTrue(responseOfRightCard.getCardResponseMessage().isCardValuePresent());
+    Assertions.assertTrue(responseOfRightCard.getCardResponseMessage().isCardSuitsPresent());
+
+    Assertions.assertTrue(startedGameRoom.getMembers().get(0).isTurn());
+
+    Assertions.assertTrue(startedGameRoom.getMembers().get(3).getCards().contains(new Card(responseOfRightCard.getCardRequestMessage().getCardValue(), responseOfRightCard.getCardRequestMessage().getSuits().get(0))));
+
+    Assertions.assertTrue(startedGameRoom.getMembers().get(3).getCards().size()==5,startedGameRoom.getMembers().get(3).getCards().toString());
+
+    Assertions.assertTrue(startedGameRoom.getMembers().get(0).getCards().size()==4);
+
+    Assertions.assertTrue(startedGameRoom.getDeck().size()==(52-startedGameRoom.getMembers().size()*4-1));
+
+    }
 }

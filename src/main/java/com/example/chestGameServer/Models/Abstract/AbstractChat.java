@@ -1,6 +1,7 @@
 package com.example.chestGameServer.Models.Abstract;
 
 import com.example.chestGameServer.Exceptions.FullChatException;
+import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -46,6 +47,14 @@ public abstract class AbstractChat<M extends AbstractUser> implements Serializab
     public void addMember(M member) throws FullChatException {
         if(isRoomSizeLimitReached()) throw new FullChatException("roomSizeLimit is reached",getId(),name);
         members.add(member);
+    }
+    public void updateMember(M member) throws UserNotFoundException {
+        int indexOf=-1;
+       for(int i=0;i<members.size();i++)
+       if(members.get(i).getId().equals(member.getId())) indexOf=i;
+       if(indexOf==-1) throw new UserNotFoundException("cant find user to update",member.getId());
+       members.remove(indexOf);
+       members.add(indexOf,member);
     }
     public AbstractChat(List<M> members) {
         this.members = members;
