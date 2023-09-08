@@ -1,13 +1,17 @@
 package com.example.chestGameServer.Services;
 
+import com.example.chestGameServer.Controllers.WebSocket.GameProcessController;
 import com.example.chestGameServer.Controllers.WebSocket.WsUtils;
 import com.example.chestGameServer.Exceptions.FullChatException;
 import com.example.chestGameServer.Exceptions.ObjectNotFoundException;
 import com.example.chestGameServer.Exceptions.UserNotFoundException;
+import com.example.chestGameServer.Models.DTO.Events.ChestCompletedEvent;
+import com.example.chestGameServer.Models.DTO.Events.GameProcessEvent;
 import com.example.chestGameServer.Models.DTO.Events.GameStartedEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CardResponseMessage;
 import com.example.chestGameServer.Models.Game.Card.Card;
+import com.example.chestGameServer.Models.Game.Card.CardValue;
 import com.example.chestGameServer.Models.Game.GameRoom;
 import com.example.chestGameServer.Models.Game.GameUtils;
 import com.example.chestGameServer.Models.Game.Player;
@@ -32,6 +36,11 @@ import java.util.stream.Stream;
 public class GameProcessService {
     GameRoomService gameRoomService;
     SimpMessagingTemplate messagingTemplate;
+    public void sendGameProcessEvent(String roomId,GameProcessEvent event){
+     messagingTemplate.convertAndSend(GameProcessController.FETCH_GAME_PROCESS_EVENTS.replace("{room_id}",roomId),event);
+    }
+
+    //TODO : check chests on the start
     public void startGame(GameRoom gameRoom) throws FullChatException {
         List<Card> deck= GameUtils.generateDeck();
         gameRoom.getMembers().forEach(player -> {
@@ -77,12 +86,20 @@ public class GameProcessService {
         List<Card> cardsToRemove=new ArrayList<>();
         requestMessage.getSuits().forEach(suit -> cardsToRemove.add(new Card(requestMessage.getCardValue(),suit)));
         receiptPlayer.getCards().removeAll(cardsToRemove);
-        requestingPlayer.addCards(cardsToRemove);
+        CardValue potentialChestCardValue=requestingPlayer.addCards(cardsToRemove);
+        if(potentialChestCardValue!=null) sendGameProcessEvent(roomId,ChestCompletedEvent.builder().completedChestCardValue(potentialChestCardValue)
+                .chestCompletedSessionId(requestingPlayer.getSessionId())
+                .chat(gameRoom)
+                .message("player "+ requestingPlayer.getName()+ " completed a chest of "+ potentialChestCardValue.getName())
+                .build());
         if(receiptPlayer.getCards().size()<4)while(receiptPlayer.getCards().size()!=4 && gameRoom.getDeck().size()!=0){
-           receiptPlayer.addCard(gameRoom.getDeck().remove(gameRoom.getDeck().size()-1));
+           CardValue cardValue=receiptPlayer.addCard(gameRoom.getDeck().remove(gameRoom.getDeck().size()-1));
+        if(cardValue!=null) sendGameProcessEvent(roomId,ChestCompletedEvent.builder().completedChestCardValue(potentialChestCardValue)
+                .chestCompletedSessionId(receiptPlayer.getSessionId())
+                .chat(gameRoom)
+                .message("player "+ receiptPlayer.getName()+ " completed a chest of "+ potentialChestCardValue.getName())
+                .build());
         }
-//        gameRoom.updateMember(receiptPlayer);
-//        gameRoom.updateMember(requestingPlayer);
         return changeTurn(gameRoom,requestingPlayer,cardResponseMessage);
     }
     private Player getPlayerBySessionId(String sessionID, GameRoom gameRoom) throws UserNotFoundException {

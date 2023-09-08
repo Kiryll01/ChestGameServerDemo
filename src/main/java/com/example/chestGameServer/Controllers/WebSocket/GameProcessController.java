@@ -2,6 +2,7 @@ package com.example.chestGameServer.Controllers.WebSocket;
 
 import com.example.chestGameServer.Exceptions.ObjectNotFoundException;
 import com.example.chestGameServer.Exceptions.RoomException;
+import com.example.chestGameServer.Models.DTO.Events.GameProcessEvent;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestMessage;
 import com.example.chestGameServer.Models.DTO.Messages.CardRequestSummary;
 import com.example.chestGameServer.Models.DTO.Messages.CardResponseMessage;
@@ -32,24 +33,28 @@ public class GameProcessController {
     public static final String FETCH_PERSONAL_CARD_REQUESTS="/topic/rooms.game.process.room.{room_id}.member.{member_id}.card-requests";
     public static final String FETCH_ALL_CARD_REQUESTS="/topic/rooms.game.process.room.{room_id}.card-requests";
     public static final String REQUEST_CARDS="/rooms.game.process.room.{room_id}.receipt.{receipt_id}.card-requests";
-public static String getFetchCardsDestination(String roomId){
-    return FETCH_ALL_CARD_REQUESTS.replace("{room_id}",roomId);
-}
+    public static final String FETCH_GAME_PROCESS_EVENTS="/rooms.game.process.room.{room_id}.game-events";
     GameProcessService gameProcessService;
     SimpMessagingTemplate messagingTemplate;
     UserService userService;
     GameRoomService gameRoomService;
+    public static String getFetchCardsDestination(String roomId){
+        return FETCH_ALL_CARD_REQUESTS.replace("{room_id}",roomId);
+    }
+    @SubscribeMapping(FETCH_GAME_PROCESS_EVENTS)
+    public GameProcessEvent fetchGameProcessEvents(@DestinationVariable("room_id") String roomId){
+        return null;
+    }
     @SubscribeMapping(FETCH_ALL_CARD_REQUESTS)
     public CardRequestSummary fetchCardRequests(@DestinationVariable("room_id") String roomId){
         log.info("new client subscribed to fetch cardRequests");
         return null;
     }
-@MessageMapping(REQUEST_CARDS)
+    @MessageMapping(REQUEST_CARDS)
     public void requestCards(@DestinationVariable("room_id")String roomId,
                              @DestinationVariable("receipt_id")String receiptSessionId,
                              CardRequestMessage requestMessage,
-                             @Header("simpSessionId") String requestSessionId
-) throws RoomException{
+                             @Header("simpSessionId") String requestSessionId) throws RoomException{
        try {
            if(!gameRoomService.findById(roomId).getMembers().stream()
                    .filter(player -> player.isTurn())
