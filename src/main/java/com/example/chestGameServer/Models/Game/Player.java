@@ -44,7 +44,6 @@ public class Player extends AbstractUser {
     }
 private boolean checkIfChestIsComplete(List<Card> addedCards){
         List<Card> potentialChestCards=new ArrayList<>();
-        potentialChestCards.addAll(addedCards);
         cards.forEach(card -> {
             if(card.getCardValue().equals(addedCards.get(0).getCardValue()))potentialChestCards.add(card);
             });

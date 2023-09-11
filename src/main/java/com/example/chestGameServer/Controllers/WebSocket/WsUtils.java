@@ -40,4 +40,7 @@ public class WsUtils {
     public static String getCardRequestDestination(String roomId,String receiptSessionId){
         return GameProcessController.REQUEST_CARDS.replace("{room_id}",roomId).replace("{receipt_id}",receiptSessionId);
     }
+    public static String getFetchGameProcessEventsDestination(String roomId){
+        return GameProcessController.FETCH_GAME_PROCESS_EVENTS.replace("{room_id}",roomId);
+    }
 }

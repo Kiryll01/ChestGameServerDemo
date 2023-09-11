@@ -82,7 +82,6 @@ public GameRoom joinRoom(
     return gameRoom;
 }
 
-//TODO: peak name from Principal
 @MessageMapping(CREATE_GAME_ROOM)
     public void createRoom(
         CreateRoomMessage message,

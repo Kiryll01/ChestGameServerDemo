@@ -43,7 +43,7 @@ public class MemberWsController {
 
     @MessageExceptionHandler
     public void handleRoomExceptions(RoomException e){
-        log.info("exception was catched : "+e);
+        log.info("exception was catched : "+e.toString());
         String message = e.getMessage();
         messagingTemplate.convertAndSend(
                 WsUtils.getRoomExceptionHandlingDestination(e.getSessionId(),e.getRoomId()),
