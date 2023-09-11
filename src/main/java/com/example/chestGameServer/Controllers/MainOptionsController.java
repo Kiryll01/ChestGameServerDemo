@@ -30,50 +30,53 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class MainOptionsController {
     GameRoomService gameRoomService;
-    public static String makeJoinRoomLink(String roomId){
-        return GameRoomController.JOIN_ROOM.replace("{room_id}",roomId);
+
+    public static String makeJoinRoomLink(String roomId) {
+        return GameRoomController.JOIN_ROOM.replace("{room_id}", roomId);
     }
     UserService userService;
-    public static final String FETCH_ROOMS="/user/{user_id}/rooms/game_room/get_all";
-    public static final String RETRIEVE_USER="/user/{username}/get";
-    public static final String FETCH_USERS="/user/get_all";
-    public static final String GET_ACCOUNT_INFO="/user/get_info";
+    public static final String FETCH_ROOMS = "/user/{user_id}/rooms/game_room/get_all";
+    public static final String RETRIEVE_USER = "/user/{username}/get";
+    public static final String FETCH_USERS = "/user/get_all";
+    public static final String GET_ACCOUNT_INFO = "/user/get_info";
 
     @GetMapping(FETCH_USERS)
-    public ResponseEntity<List<UserDTO>> fetchUsers(){
-        List<User> usersFromDb=userService.getAll();
-        List<UserDTO> userDTOS=new ArrayList<>(100);
+    public ResponseEntity<List<UserDTO>> fetchUsers() {
+        List<User> usersFromDb = userService.getAll();
+        List<UserDTO> userDTOS = new ArrayList<>(100);
         usersFromDb.forEach(user -> userDTOS.add(UserMapper.USER_MAPPER.toUserDto(user)));
         return ResponseEntity.ok(userDTOS);
     }
 
     @GetMapping(RETRIEVE_USER)
     public ResponseEntity<UserDTO> retrieveUser(@PathVariable("username") String userName) throws UserNotFoundException {
-        User user=userService.findUserByName(userName);
-        if(user==null)throw new UserNotFoundException("user not found",userName);
+        User user = userService.findUserByName(userName);
+        if (user == null) throw new UserNotFoundException("user not found", userName);
         return ResponseEntity.ok()
                 .body(UserMapper.USER_MAPPER.toUserDto(user));
     }
+
     @GetMapping(FETCH_ROOMS)
     @ResponseBody
-    public ResponseEntity<?> fetchGameRooms(@PathVariable("user_id")String userId){
-        List<EntityModel<GameRoom>> rooms= ((List<GameRoom>) gameRoomService.findAll()).stream()
-                .map(room-> EntityModel.of(room,
+    public ResponseEntity<?> fetchGameRooms(@PathVariable("user_id") String userId) {
+        List<EntityModel<GameRoom>> rooms = ((List<GameRoom>) gameRoomService.findAll()).stream()
+                .map(room -> EntityModel.of(room,
                         linkTo(GameRoomController.class).slash(makeJoinRoomLink(room.getId())).withRel("game_room_ws_subscribe_link")))
                 .collect(Collectors.toList());
         return ResponseEntity.ok().body(
-                CollectionModel.of(rooms,linkTo(methodOn(MainOptionsController.class).fetchGameRooms(userId)).withSelfRel()));
+                CollectionModel.of(rooms, linkTo(methodOn(MainOptionsController.class).fetchGameRooms(userId)).withSelfRel()));
 
     }
+
     @GetMapping(GET_ACCOUNT_INFO)
     public ResponseEntity<?> getAccountInfo(HttpSession httpSession) throws UserNotFoundException {
-        UserPrincipal userPrincipal=(UserPrincipal) httpSession.getAttribute(HttpAttributes.USER_PRINCIPAL.getName());
-        User user=userService.findById(userPrincipal.getUser().getId());
-    return ResponseEntity.ok(UserMapper.USER_MAPPER.toUserDto(user));
+        UserPrincipal userPrincipal = (UserPrincipal) httpSession.getAttribute(HttpAttributes.USER_PRINCIPAL.getName());
+        User user = userService.findById(userPrincipal.getUser().getId());
+        return ResponseEntity.ok(UserMapper.USER_MAPPER.toUserDto(user));
     }
 
 }
