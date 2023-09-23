@@ -7,12 +7,13 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PROTECTED,makeFinal = true)
+@FieldDefaults(level = AccessLevel.PROTECTED, makeFinal = true)
 @Component
 public class ExceptionUtils {
     SimpMessagingTemplate messagingTemplate;
-public void sendExceptionToUser(String simpSessionId,String userPrefixedDestination,AppException exception){
-String message=exception.getMessage();
-messagingTemplate.convertAndSendToUser(simpSessionId,userPrefixedDestination,message);
-}
+
+    public void sendExceptionToUser(String simpSessionId, String userPrefixedDestination, AppException exception) {
+        String message = exception.getMessage();
+        messagingTemplate.convertAndSendToUser(simpSessionId, userPrefixedDestination, message);
+    }
 }

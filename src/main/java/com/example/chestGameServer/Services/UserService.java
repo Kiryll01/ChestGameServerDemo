@@ -1,8 +1,8 @@
 package com.example.chestGameServer.Services;
 
+import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import com.example.chestGameServer.Models.User.User;
 import com.example.chestGameServer.Repositories.UserRepository;
-import com.example.chestGameServer.Exceptions.UserNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

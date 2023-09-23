@@ -1,14 +1,10 @@
 package com.example.chestGameServer.Models.User;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.SecondaryRow;
 
 import java.io.Serializable;
-import java.util.Set;
 
 @Entity(name = "_roles")
 @FieldDefaults(level = AccessLevel.PRIVATE)

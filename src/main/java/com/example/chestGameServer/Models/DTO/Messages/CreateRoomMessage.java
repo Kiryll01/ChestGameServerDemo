@@ -11,6 +11,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateRoomMessage {
-String name;
-int roomSizeLimit;
+    String name;
+    int roomSizeLimit;
 }

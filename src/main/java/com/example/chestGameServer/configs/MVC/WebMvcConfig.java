@@ -9,15 +9,16 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@FieldDefaults(makeFinal = true,level = AccessLevel.PRIVATE)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
     @Bean
-    HttpAuthInterceptor httpAuthInterceptor(){
+    HttpAuthInterceptor httpAuthInterceptor() {
         return new HttpAuthInterceptor();
     }
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(httpAuthInterceptor());
+        registry.addInterceptor(httpAuthInterceptor());
     }
 }

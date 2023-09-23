@@ -38,6 +38,7 @@ public class MainOptionsController {
     public static String makeJoinRoomLink(String roomId) {
         return GameRoomController.JOIN_ROOM.replace("{room_id}", roomId);
     }
+
     UserService userService;
     public static final String FETCH_ROOMS = "/user/{user_id}/rooms/game_room/get_all";
     public static final String RETRIEVE_USER = "/user/{username}/get";

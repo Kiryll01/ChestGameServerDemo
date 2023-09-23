@@ -1,17 +1,16 @@
 package com.example.chestGameServer.Exceptions;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FullChatException extends AppException{
+public class FullChatException extends AppException {
     String chatId;
     String chatName;
-    public FullChatException(String message,String chatId, String chatName) {
+
+    public FullChatException(String message, String chatId, String chatName) {
         super(message);
         this.chatId = chatId;
         this.chatName = chatName;

@@ -6,9 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.Cascade;
 
-import java.util.HashSet;
 import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -26,12 +24,15 @@ public class User extends AbstractUser {
     String pass;
     @Enumerated(EnumType.STRING)
     Set<UserRoles> roles;
-    public void addRole(UserRoles userRole){
+
+    public void addRole(UserRoles userRole) {
         roles.add(userRole);
     }
-    public void deleteRole(UserRoles userRole){
+
+    public void deleteRole(UserRoles userRole) {
         roles.remove(userRole);
     }
+
     public User(UserStats userStats, String name) {
         super(name);
         //setDefaultRole();

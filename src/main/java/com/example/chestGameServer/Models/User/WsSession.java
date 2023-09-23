@@ -5,7 +5,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
-import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
@@ -13,10 +12,10 @@ import java.util.Set;
 @Builder
 @Data
 public class WsSession {
-UserDTO user;
-@Builder.Default
-boolean isInGame=false;
-String gameRoomId;
-@Builder.Default
-final long createdAt= Instant.now().getEpochSecond();
+    UserDTO user;
+    @Builder.Default
+    boolean isInGame = false;
+    String gameRoomId;
+    @Builder.Default
+    final long createdAt = Instant.now().getEpochSecond();
 }

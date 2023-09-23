@@ -13,9 +13,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 public class AuthRequest {
-String name;
-@Min(value = 7)
-@Max(value = 12)
-String pass;
+    String name;
+    @Min(value = 7)
+    @Max(value = 12)
+    String pass;
 
 }

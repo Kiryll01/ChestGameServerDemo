@@ -43,8 +43,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Log4j2
 @FieldDefaults(level = AccessLevel.PROTECTED)
-public class GameRoomTests extends AbstractTestClass{
+public class GameRoomTests extends AbstractTestClass {
     WebClient client;
+
     @BeforeAll
     public void setupWebSockets() throws Exception {
 
@@ -65,16 +66,17 @@ public class GameRoomTests extends AbstractTestClass{
 //                .andReturn()
 //                .getResponse()
 //                .getContentAsString();
-        WebSocketHttpHeaders handshakeHeaders=new WebSocketHttpHeaders();
+        WebSocketHttpHeaders handshakeHeaders = new WebSocketHttpHeaders();
         handshakeHeaders.add(HttpAttributes.USER_NAME.name(), user.getName());
         handshakeHeaders.add(HttpAttributes.USER_PASS.name(), user.getPass());
 
 
-        StompHeaders connectHeaders=new StompHeaders();
+        StompHeaders connectHeaders = new StompHeaders();
         connectHeaders.add(HttpAttributes.USER_NAME.name(), user.getName());
         connectHeaders.add(HttpAttributes.USER_PASS.name(), user.getPass());
         StompSession stompSession = stompClient
-                .connect(wsUrl,handshakeHeaders,connectHeaders, new StompSessionHandlerAdapter() {})
+                .connect(wsUrl, handshakeHeaders, connectHeaders, new StompSessionHandlerAdapter() {
+                })
                 .get(5, TimeUnit.SECONDS);
 
         //Thread.sleep(5000);
@@ -86,88 +88,92 @@ public class GameRoomTests extends AbstractTestClass{
                 .build();
 
     }
-@Test
-public void createRoomTest() throws Exception  {
 
-    StompSession session = client.getStompSession();
-    CreateRoomMessage createRoomMessage = new CreateRoomMessage("Zahodite_bratiya_igrat", 4);
-    session.send(GameRoomController.CREATE_GAME_ROOM, createRoomMessage);
-         RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
-        session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
+    @Test
+    public void createRoomTest() throws Exception {
 
-    byte[] payload= (byte[]) handler.getFuture().get();
+        StompSession session = client.getStompSession();
+        CreateRoomMessage createRoomMessage = new CreateRoomMessage("Zahodite_bratiya_igrat", 4);
+        session.send(GameRoomController.CREATE_GAME_ROOM, createRoomMessage);
+        RunStopFrameHandler handler = new RunStopFrameHandler(new CompletableFuture<>());
+        session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT, handler);
 
-    GameRoom responseGameRoom=mapper.readValue(payload, GameRoom.class);
-    Assertions.assertEquals(createRoomMessage.getName(),responseGameRoom.getName(),"names should be equal");
-    System.out.println("received payload:");
+        byte[] payload = (byte[]) handler.getFuture().get();
 
-    log.info(responseGameRoom);
+        GameRoom responseGameRoom = mapper.readValue(payload, GameRoom.class);
+        Assertions.assertEquals(createRoomMessage.getName(), responseGameRoom.getName(), "names should be equal");
+        System.out.println("received payload:");
 
-    String user_id=user.getId();
+        log.info(responseGameRoom);
+
+        String user_id = user.getId();
 
         String contentAsString = mockMvc
-            .perform(MockMvcRequestBuilders.get(MainOptionsController.FETCH_ROOMS,user_id))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .perform(MockMvcRequestBuilders.get(MainOptionsController.FETCH_ROOMS, user_id))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-    log.info(contentAsString);
+        log.info(contentAsString);
 
-    };
+    }
+
+    ;
+
     @Test
     public void createBreakRoomTest() throws Exception {
         StompSession session = client.getStompSession();
 
-        String sessionId=session.getSessionId();
+        String sessionId = session.getSessionId();
 
         CreateRoomMessage createRoomMessage = new CreateRoomMessage("newGameRoom", 7);
-        RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
-        session.send(GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
+        RunStopFrameHandler handler = new RunStopFrameHandler(new CompletableFuture<>());
+        session.send(GameRoomController.CREATE_GAME_ROOM, createRoomMessage);
 
         log.info(sessionId);
 
-        StompSession.Subscription subscription=session.subscribe(
-                WsUtils.getCommonExceptionHandlingDestination(sessionId),handler);
-        session.send(GameRoomController.CREATE_GAME_ROOM,createRoomMessage);
-      log.info(subscription.getSubscriptionHeaders());
-        byte[] payload= (byte[]) handler.getFuture().get();
-        String message=mapper.readValue(payload, String.class);
+        StompSession.Subscription subscription = session.subscribe(
+                WsUtils.getCommonExceptionHandlingDestination(sessionId), handler);
+        session.send(GameRoomController.CREATE_GAME_ROOM, createRoomMessage);
+        log.info(subscription.getSubscriptionHeaders());
+        byte[] payload = (byte[]) handler.getFuture().get();
+        String message = mapper.readValue(payload, String.class);
         log.info(message);
         Assertions.assertTrue(message.contains("this type of chat can contain only 2-4 members"));
     }
 
-@Test
-public void joinRoomTest() throws Exception{
-StompSession session=client.getStompSession();
+    @Test
+    public void joinRoomTest() throws Exception {
+        StompSession session = client.getStompSession();
 
-    session.send(GameRoomController.CREATE_GAME_ROOM,new CreateRoomMessage("newNewRoom", 2));
+        session.send(GameRoomController.CREATE_GAME_ROOM, new CreateRoomMessage("newNewRoom", 2));
 
-    RunStopFrameHandler handler=new RunStopFrameHandler(new CompletableFuture<>());
-    session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT,handler);
+        RunStopFrameHandler handler = new RunStopFrameHandler(new CompletableFuture<>());
+        session.subscribe(GameRoomController.FETCH_CREATE_GAME_ROOM_EVENT, handler);
 
-    byte[] payload= (byte[]) handler.getFuture().get();
-    GameRoom responseGameRoom=mapper.readValue(payload, GameRoom.class);
+        byte[] payload = (byte[]) handler.getFuture().get();
+        GameRoom responseGameRoom = mapper.readValue(payload, GameRoom.class);
 
-    session.send(MainOptionsController.makeJoinRoomLink(responseGameRoom.getId()),user.getId());
-    RunStopFrameHandler handler2=new RunStopFrameHandler(new CompletableFuture<>());
-    session.subscribe(MemberWsController.FETCH_ROOM_EVENTS.replace("{room_id}",responseGameRoom.getId()),handler2);
-    byte[] payload2= (byte[]) handler2.getFuture().get();
-    ChatEvent<GameRoom> chatEvent=mapper.readValue(payload2, MemberJoinGameRoomEvent.class);
+        session.send(MainOptionsController.makeJoinRoomLink(responseGameRoom.getId()), user.getId());
+        RunStopFrameHandler handler2 = new RunStopFrameHandler(new CompletableFuture<>());
+        session.subscribe(MemberWsController.FETCH_ROOM_EVENTS.replace("{room_id}", responseGameRoom.getId()), handler2);
+        byte[] payload2 = (byte[]) handler2.getFuture().get();
+        ChatEvent<GameRoom> chatEvent = mapper.readValue(payload2, MemberJoinGameRoomEvent.class);
 
 
+        Assertions.assertEquals(chatEvent.getChat().getMembers().get(1).getName(), user.getName());
+        log.info(chatEvent.getChat().getMembers());
 
-    Assertions.assertEquals(chatEvent.getChat().getMembers().get(1).getName(),user.getName());
-    log.info(chatEvent.getChat().getMembers());
-
-    byte[] payload3= (byte[]) handler2.getFuture().get();
-    ChatEvent<GameRoom> chatEvent1=mapper.readValue(payload3, GameStartedEvent.class);
-    log.info(chatEvent1.getMessage());
+        byte[] payload3 = (byte[]) handler2.getFuture().get();
+        ChatEvent<GameRoom> chatEvent1 = mapper.readValue(payload3, GameStartedEvent.class);
+        log.info(chatEvent1.getMessage());
 
     }
+
     @AfterAll
     public void tearDown() {
-gameRoomService.deleteAll();
+        gameRoomService.deleteAll();
         if (client.getStompSession().isConnected()) {
             client.getStompSession().disconnect();
             client.getStompClient().stop();
@@ -205,7 +211,7 @@ gameRoomService.deleteAll();
 
             future.complete(o);
 
-            future=new CompletableFuture<>();
+            future = new CompletableFuture<>();
         }
 
         @Override

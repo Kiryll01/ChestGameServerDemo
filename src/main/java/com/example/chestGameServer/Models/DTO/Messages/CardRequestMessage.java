@@ -17,9 +17,9 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CardRequestMessage {
-CardValue cardValue;
-@Min(1)
-@Max(3)
-int cardCount;
-List<Suit>suits;
+    CardValue cardValue;
+    @Min(1)
+    @Max(3)
+    int cardCount;
+    List<Suit> suits;
 }

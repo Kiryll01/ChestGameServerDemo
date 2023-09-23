@@ -12,8 +12,9 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @NoArgsConstructor
 @SuperBuilder(builderMethodName = "memberJoinChat")
-public class MemberJoinChatEvent<C extends AbstractChat,U extends AbstractUser> extends ChatEvent<C>{
+public class MemberJoinChatEvent<C extends AbstractChat, U extends AbstractUser> extends ChatEvent<C> {
     U user;
+
     public MemberJoinChatEvent(C chat, String message, U user) {
         super(chat, message);
         this.user = user;

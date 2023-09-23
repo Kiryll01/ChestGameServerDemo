@@ -17,8 +17,8 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 public class UserStats extends AbstractUserStats {
-@OneToOne(mappedBy = "userStats")
-@JsonBackReference
-@ToString.Exclude
-User user;
+    @OneToOne(mappedBy = "userStats")
+    @JsonBackReference
+    @ToString.Exclude
+    User user;
 }

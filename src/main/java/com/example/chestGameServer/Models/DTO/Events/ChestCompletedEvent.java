@@ -12,9 +12,9 @@ import lombok.experimental.SuperBuilder;
 @Data
 @NoArgsConstructor
 @SuperBuilder(builderMethodName = "builder")
-public class ChestCompletedEvent extends GameProcessEvent{
-CardValue completedChestCardValue;
-String chestCompletedSessionId;
+public class ChestCompletedEvent extends GameProcessEvent {
+    CardValue completedChestCardValue;
+    String chestCompletedSessionId;
 
     public ChestCompletedEvent(GameRoom chat, String message, CardValue completedChestCardValue, String chestCompletedSessionId) {
         super(chat, message);

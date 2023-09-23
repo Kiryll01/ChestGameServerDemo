@@ -10,14 +10,16 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-@FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
-public class GameRoomService extends AbstractRoomService<GameRoom,GameRoomRepository> {
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class GameRoomService extends AbstractRoomService<GameRoom, GameRoomRepository> {
     public GameRoomService(GameRoomRepository repository, SimpMessagingTemplate messagingTemplate) {
-        super(GameRoom.class, repository,messagingTemplate);
+        super(GameRoom.class, repository, messagingTemplate);
     }
-public void deleteAll(){
+
+    public void deleteAll() {
         repository.deleteAll();
-}
+    }
+
     @Override
     public void sendChatEvent(String roomId, ChatEvent event) {
         messagingTemplate.convertAndSend(WsUtils.getEventHandlingDestination(roomId),

@@ -18,27 +18,30 @@ public class EmbeddedDBTests {
     @Autowired
     UserRepository userRepository;
     User userToSave;
+
     @BeforeAll
-    public void setup(){
+    public void setup() {
         userToSave = User.builder()
                 .name("max111")
                 .userStats(new UserStats())
                 .build();
     }
+
     @Test
-    public void testingUserSave(){
-        User userFromDb= userRepository.save(userToSave);
+    public void testingUserSave() {
+        User userFromDb = userRepository.save(userToSave);
         log.info(userToSave);
         log.info(userFromDb);
-        Assertions.assertEquals(userToSave,userFromDb);
+        Assertions.assertEquals(userToSave, userFromDb);
     }
+
     @Test
-    public void testingFindUserByName(){
-       userRepository.save(userToSave);
-       User userFromDb=userRepository.findUserByName(userToSave.getName());
-       Assertions.assertNotNull(userFromDb);
-       Assertions.assertEquals(userFromDb,userToSave);
-    log.info(userFromDb);
-    log.info(userToSave);
+    public void testingFindUserByName() {
+        userRepository.save(userToSave);
+        User userFromDb = userRepository.findUserByName(userToSave.getName());
+        Assertions.assertNotNull(userFromDb);
+        Assertions.assertEquals(userFromDb, userToSave);
+        log.info(userFromDb);
+        log.info(userToSave);
     }
 }

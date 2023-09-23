@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder(builderMethodName = "builder")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GameStartedEvent extends ChatEvent<GameRoom>{
+public class GameStartedEvent extends ChatEvent<GameRoom> {
     public GameStartedEvent(GameRoom chat, String message) {
         super(chat, message);
     }
